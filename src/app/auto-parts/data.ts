@@ -48,7 +48,7 @@ export const companyInfo = {
 }
 
 export const autoPartsContact = {
-  address: 'Katimamulilo, Katima Mulilo, Namibia',
+  address: '41648 1/Shop E G JIMBARA MALL, MANSA',
   phone: '+260 977161341',
   phoneHref: 'tel:+260977161341',
   whatsapp: '+260 961606167',

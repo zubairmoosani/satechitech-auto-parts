@@ -106,9 +106,9 @@ const ContactUs = () => {
           <Col xs={12}>
             <p className="text-center text-body-secondary small mb-2">{contact.mapTitle}</p>
             <iframe
-              title="Katima Mulilo location"
+              title="Jimbara Mall, Mansa location"
               className="w-100 h-300px grayscale rounded"
-              src="https://maps.google.com/maps?q=Katima+Mulilo,+Namibia&hl=en&z=13&output=embed"
+              src="https://maps.google.com/maps?q=41648+1/Shop+E+G+JIMBARA+MALL,+MANSA&hl=en&z=15&output=embed"
               height={400}
               style={{ border: 0 }}
               loading="lazy"
