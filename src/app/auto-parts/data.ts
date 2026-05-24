@@ -106,7 +106,7 @@ export const sectionCopy = {
   },
 }
 
-export type AutoPartCategoryKey = 'popular' | 'brakes' | 'body' | 'accessories'
+export type AutoPartCategoryKey = 'engine' | 'brakes' | 'body' | 'accessories'
 
 export type AutoPartCategory = {
   key: AutoPartCategoryKey
@@ -115,7 +115,7 @@ export type AutoPartCategory = {
 }
 
 export const autoPartCategories: AutoPartCategory[] = [
-  { key: 'popular', label: 'Popular', icon: FaStar },
+  { key: 'engine', label: 'Engine parts', icon: FaGaugeHigh },
   { key: 'brakes', label: 'Brakes', icon: FaCarBurst },
   { key: 'body', label: 'Body', icon: FaScrewdriverWrench },
   { key: 'accessories', label: 'Accessories', icon: FaOilCan },

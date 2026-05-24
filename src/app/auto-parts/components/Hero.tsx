@@ -1,16 +1,12 @@
-'use client'
 import CategoryNav from '@/app/auto-parts/components/CategoryNav'
 import HeroPromos from '@/app/auto-parts/components/HeroPromos'
 import { autoPartsContact, pageImages, sectionCopy } from '@/app/auto-parts/data'
-import type { AutoPartCategoryKey } from '@/app/auto-parts/data'
 import Image from 'next/image'
 import Link from 'next/link'
-import { useState } from 'react'
 import { Col, Container, Row } from 'react-bootstrap'
 import { FaWhatsapp } from 'react-icons/fa6'
 
 const Hero = () => {
-  const [activeCategory, setActiveCategory] = useState<AutoPartCategoryKey>('popular')
   const { hero } = sectionCopy
 
   return (
@@ -43,9 +39,11 @@ const Hero = () => {
         </Row>
 
         <Row className="justify-content-center mb-4">
-          <Col xs={12}>
-            <p className="text-center text-body-secondary small mb-2">{hero.categoryLabel}</p>
-            <CategoryNav active={activeCategory} onChange={setActiveCategory} />
+          <Col xs={12} lg={10}>
+            <div className="text-center mb-3 mb-md-4">
+              <p className="text-body-secondary mb-0">{hero.categoryLabel}</p>
+            </div>
+            <CategoryNav />
           </Col>
         </Row>
 

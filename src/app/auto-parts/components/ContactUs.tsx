@@ -31,61 +31,68 @@ const ContactUs = () => {
             </div>
           </Col>
           <Col lg={6}>
-            <Card className="card-body shadow-sm p-4 p-md-5 h-100">
+            <Card className="card-body shadow-sm p-4 p-md-5 h-100 overflow-hidden">
               <h5 className="mb-4">{contact.detailsTitle}</h5>
               <ListGroup variant="flush" className="border-0">
-                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3">
+                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3 overflow-hidden">
                   <span className="icon-md bg-light rounded flex-centered flex-shrink-0">
                     <BsGeoAlt className="text-primary" />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-grow-1">
                     <h6 className="mb-1">Shop address</h6>
-                    <p className="mb-0 text-body-secondary">{autoPartsContact.address}</p>
+                    <p className="mb-0 text-body-secondary text-break">{autoPartsContact.address}</p>
                   </div>
                 </ListGroupItem>
-                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3">
+                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3 overflow-hidden">
                   <span className="icon-md bg-light rounded flex-centered flex-shrink-0">
                     <BsClock className="text-primary" />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-grow-1">
                     <h6 className="mb-1">Opening hours</h6>
-                    <p className="mb-0 text-body-secondary">{autoPartsContact.hours}</p>
+                    <p className="mb-0 text-body-secondary text-break">{autoPartsContact.hours}</p>
                   </div>
                 </ListGroupItem>
-                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3">
+                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3 overflow-hidden">
                   <span className="icon-md bg-light rounded flex-centered flex-shrink-0">
                     <BsTelephone className="text-primary" />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-grow-1">
                     <h6 className="mb-1">Phone</h6>
-                    <Link href={autoPartsContact.phoneHref} className="text-body-secondary text-primary-hover">
+                    <Link
+                      href={autoPartsContact.phoneHref}
+                      className="text-body-secondary text-primary-hover text-break d-inline"
+                    >
                       {autoPartsContact.phone}
                     </Link>
                   </div>
                 </ListGroupItem>
-                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3">
+                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3 overflow-hidden">
                   <span className="icon-md bg-light rounded flex-centered flex-shrink-0">
                     <FaWhatsapp className="text-success" />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-grow-1">
                     <h6 className="mb-1">WhatsApp</h6>
                     <Link
                       href={autoPartsContact.whatsappHref}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary"
+                      className="text-primary text-break d-inline"
                     >
                       {autoPartsContact.whatsapp}
                     </Link>
                   </div>
                 </ListGroupItem>
-                <ListGroupItem className="px-0 d-flex align-items-start gap-3">
+                <ListGroupItem className="px-0 border-0 d-flex align-items-start gap-3 overflow-hidden">
                   <span className="icon-md bg-light rounded flex-centered flex-shrink-0">
                     <BsEnvelope className="text-primary" />
                   </span>
-                  <div>
+                  <div className="min-w-0 flex-grow-1">
                     <h6 className="mb-1">Email</h6>
-                    <Link href={autoPartsContact.emailHref} className="text-body-secondary text-primary-hover">
+                    <Link
+                      href={autoPartsContact.emailHref}
+                      className="text-body-secondary text-primary-hover text-break"
+                      style={{ overflowWrap: 'anywhere' }}
+                    >
                       {autoPartsContact.email}
                     </Link>
                   </div>

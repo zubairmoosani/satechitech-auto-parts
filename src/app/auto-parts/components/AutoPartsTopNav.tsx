@@ -30,7 +30,7 @@ const AutoPartsTopNav = () => {
               width={160}
               height={80}
               priority
-              className="object-fit-contain d-inline-block"
+              className="object-fit-contain rounded-2 bg-white p-2 d-inline-block"
               style={{ width: 'auto', height: 48, maxWidth: 160 }}
             />
           </NavbarBrand>

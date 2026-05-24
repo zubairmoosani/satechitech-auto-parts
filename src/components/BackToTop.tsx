@@ -1,7 +1,7 @@
 'use client'
 import clsx from 'clsx'
 import { useEffect, useState } from 'react'
-import { FaArrowUpLong } from 'react-icons/fa6'
+import { BsArrowUp } from 'react-icons/bs'
 
 const BackToTop = () => {
   const [showScrollTop, setShowScrollTop] = useState<boolean>(false)
@@ -22,9 +22,14 @@ const BackToTop = () => {
   }, [])
 
   return (
-    <div className={clsx('back-top', { 'back-top-show': showScrollTop })} onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-      <FaArrowUpLong />
-    </div>
+    <button
+      type="button"
+      aria-label="Back to top"
+      className={clsx('back-top', { 'back-top-show': showScrollTop })}
+      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+    >
+      <BsArrowUp aria-hidden />
+    </button>
   )
 }
 

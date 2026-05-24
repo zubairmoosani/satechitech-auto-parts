@@ -58,23 +58,36 @@
   position: fixed !important;
   bottom: 40px;
   right: 40px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 99;
   visibility: hidden;
   opacity: 0;
   transform: translateY(50%);
   transition: $transition-base;
-  background:  var(--#{$prefix}primary);
+  background: var(--#{$prefix}primary);
   color: $white;
   border-radius: 10%;
   width: 52px;
   height: 52px;
-  line-height: 52px;
-  text-align: center;
-  &:hover{
+  border: 0;
+  padding: 0;
+
+  &::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  svg {
+    font-size: 1.25rem;
+  }
+
+  &:hover {
     background: var(--bs-link-hover-color);
     color: $white;
   }
+
   &.back-top-show {
     visibility: visible;
     opacity: 1;

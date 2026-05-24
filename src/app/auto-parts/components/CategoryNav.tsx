@@ -1,35 +1,26 @@
-'use client'
-import { autoPartCategories, type AutoPartCategoryKey } from '@/app/auto-parts/data'
-import clsx from 'clsx'
-import { Nav, NavItem, NavLink } from 'react-bootstrap'
+import { autoPartCategories } from '@/app/auto-parts/data'
+import { Col, Row } from 'react-bootstrap'
 
-type CategoryNavProps = {
-  active: AutoPartCategoryKey
-  onChange: (key: AutoPartCategoryKey) => void
-  className?: string
-}
-
-const CategoryNav = ({ active, onChange, className }: CategoryNavProps) => {
+const CategoryNav = () => {
   return (
-    <Nav className={clsx('nav-pills-primary-soft flex-nowrap justify-content-center gap-1', className)}>
+    <Row className="g-3 g-md-4 justify-content-center" role="presentation">
       {autoPartCategories.map((item) => {
         const Icon = item.icon
-        const isActive = active === item.key
         return (
-          <NavItem key={item.key}>
-            <NavLink
-              as="button"
-              type="button"
-              className={clsx('nav-link flex-centered mb-0', isActive && 'active')}
-              onClick={() => onChange(item.key)}
+          <Col key={item.key} xs={6} md={3}>
+            <div
+              className="text-center rounded-3 bg-light border border-light-subtle px-3 py-4 h-100"
+              aria-hidden="true"
             >
-              <Icon className="me-2" size={16} />
-              {item.label}
-            </NavLink>
-          </NavItem>
+              <div className="icon-lg bg-primary bg-opacity-10 text-primary rounded-3 flex-centered mx-auto mb-3">
+                <Icon className="fs-5" />
+              </div>
+              <span className="fw-semibold text-body d-block">{item.label}</span>
+            </div>
+          </Col>
         )
       })}
-    </Nav>
+    </Row>
   )
 }
 

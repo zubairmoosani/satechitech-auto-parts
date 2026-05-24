@@ -19916,7 +19916,9 @@ input[type=date]::-webkit-calendar-picker-indicator {
   position: fixed !important;
   bottom: 40px;
   right: 40px;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   z-index: 99;
   visibility: hidden;
   opacity: 0;
@@ -19929,18 +19931,15 @@ input[type=date]::-webkit-calendar-picker-indicator {
   border-radius: 10%;
   width: 52px;
   height: 52px;
-  line-height: 52px;
-  text-align: center;
+  border: 0;
+  padding: 0;
 }
 .back-top:before {
-  content: "\f176";
-  font-family: "Font Awesome 6 Free";
-  font-weight: 900;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  -webkit-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
+  display: none !important;
+  content: none !important;
+}
+.back-top svg {
+  font-size: 1.25rem;
 }
 .back-top:hover {
   background: var(--bs-link-hover-color);
@@ -19957,12 +19956,11 @@ input[type=date]::-webkit-calendar-picker-indicator {
   .back-top {
     bottom: 10px;
     right: 10px;
-    width: 30px;
-    height: 30px;
-    line-height: 30px;
+    width: 40px;
+    height: 40px;
   }
-  .back-top:before {
-    font-size: 0.6rem;
+  .back-top svg {
+    font-size: 1rem;
   }
 }
 @media (max-width: 575.98px) {
