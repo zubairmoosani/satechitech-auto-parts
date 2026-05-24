@@ -8,10 +8,10 @@ import { usePathname } from 'next/navigation'
 import { Collapse, Container, Nav, Navbar, NavbarBrand } from 'react-bootstrap'
 
 const navItems = [
-  { label: 'Home', href: '/auto-parts' },
-  { label: 'Products', href: '/auto-parts#products' },
-  { label: 'About', href: '/auto-parts#about-us' },
-  { label: 'Contact', href: '/auto-parts#contact-us' },
+  { label: 'Home', href: '/' },
+  { label: 'Products', href: '/#products' },
+  { label: 'About', href: '/#about-us' },
+  { label: 'Contact', href: '/#contact-us' },
 ]
 
 const AutoPartsTopNav = () => {
@@ -23,7 +23,7 @@ const AutoPartsTopNav = () => {
     <header className={clsx('navbar-light header-sticky', { 'header-sticky-on': scrollY >= 400 })}>
       <Navbar expand="lg" className="w-100">
         <Container>
-          <NavbarBrand as={Link} href="/auto-parts" className="me-0 py-0">
+          <NavbarBrand as={Link} href="/" className="me-0 py-0">
             <Image
               src={companyInfo.logo}
               alt={companyInfo.logoAlt}
@@ -54,7 +54,7 @@ const AutoPartsTopNav = () => {
             <div className="navbar-collapse" id="auto-parts-navbar">
               <Nav className="mx-auto align-items-lg-center">
                 {navItems.map((item) => {
-                  const isActive = item.href === '/auto-parts' && pathname === '/auto-parts'
+                  const isActive = item.href === '/' && pathname === '/'
                   return (
                     <Nav.Link
                       key={item.label}

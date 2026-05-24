@@ -48,7 +48,7 @@ export const options: NextAuthOptions = {
       },
     }),
   ],
-  secret: "kvwLrfri/MBznUCofIoRH9+NvGu6GqvVdqO3mor1GuA=",
+  secret: process.env.NEXTAUTH_SECRET,
   pages: {
     signIn: "/auth/sign-in",
   },

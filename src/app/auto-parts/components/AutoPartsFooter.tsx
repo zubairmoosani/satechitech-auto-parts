@@ -7,10 +7,10 @@ import { BsEnvelope, BsGeoAlt, BsTelephone } from 'react-icons/bs'
 import { FaWhatsapp } from 'react-icons/fa6'
 
 const footerNav = [
-  { label: 'Home', href: '/auto-parts' },
-  { label: 'Products', href: '/auto-parts#products' },
-  { label: 'About', href: '/auto-parts#about-us' },
-  { label: 'Contact', href: '/auto-parts#contact-us' },
+  { label: 'Home', href: '/' },
+  { label: 'Products', href: '/#products' },
+  { label: 'About', href: '/#about-us' },
+  { label: 'Contact', href: '/#contact-us' },
 ]
 
 const AutoPartsFooter = () => {
@@ -19,7 +19,7 @@ const AutoPartsFooter = () => {
       <Container>
         <Row className="g-4">
           <Col md={5} lg={4}>
-            <Link href="/auto-parts" className="d-inline-block">
+            <Link href="/" className="d-inline-block">
               <Image
                 src={companyInfo.logo}
                 alt={companyInfo.logoAlt}

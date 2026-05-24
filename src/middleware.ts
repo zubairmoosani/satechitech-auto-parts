@@ -1,17 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server'
+export { default as middleware } from 'next-auth/middleware'
 
-export function middleware(request: NextRequest) {
-  const response = NextResponse.next()
-
-  if (request.nextUrl.pathname == '/') {
-    return NextResponse.redirect(new URL('/hotels/home', request.url))
-  }
-  return response
-}
-
-// See "Matching Paths" below to learn more
 export const config = {
-  matcher: '/',
+  matcher: ['/admin/:path*', '/agent/:path*', '/user-profile/:path*'],
 }
-
-export { default } from 'next-auth/middleware'
