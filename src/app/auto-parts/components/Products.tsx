@@ -22,14 +22,14 @@ const Products = () => {
             </Col>
           ))}
         </Row>
-        <Row className="mt-4 mt-md-5">
+        {/* <Row className="mt-4 mt-md-5">
           <Col xs={12} className="text-center">
             <a href="#contact-us" className="btn btn-primary mb-0">
               {products.viewAll}
               <BsArrowRight className="ms-2" />
             </a>
           </Col>
-        </Row>
+        </Row> */}
       </Container>
     </section>
   )

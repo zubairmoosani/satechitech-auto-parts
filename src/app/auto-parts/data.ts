@@ -5,14 +5,14 @@ import featured4 from '@/assets/images/auto-parts/featured-4.jpg'
 import heroImage from '@/assets/images/auto-parts/hero.jpg'
 import aboutImage from '@/assets/images/auto-parts/about.jpg'
 import contactImage from '@/assets/images/auto-parts/contact.jpg'
-import product1 from '@/assets/images/auto-parts/product-1.jpg'
-import product2 from '@/assets/images/auto-parts/product-2.jpg'
-import product3 from '@/assets/images/auto-parts/product-3.jpg'
-import product4 from '@/assets/images/auto-parts/product-4.jpg'
-import product5 from '@/assets/images/auto-parts/product-5.jpg'
-import product6 from '@/assets/images/auto-parts/product-6.jpg'
-import product7 from '@/assets/images/auto-parts/product-7.jpg'
-import product8 from '@/assets/images/auto-parts/product-8.jpg'
+import product1 from '@/assets/images/auto-parts/product-1.webp'
+import product2 from '@/assets/images/auto-parts/products-2.jpg'
+import product3 from '@/assets/images/auto-parts/product7.jpg'
+import product4 from '@/assets/images/auto-parts/product8.jpg'
+import product5 from '@/assets/images/auto-parts/product-3.webp'
+import product6 from '@/assets/images/auto-parts/product-4.webp'
+import product7 from '@/assets/images/auto-parts/product5.jpg'
+import product8 from '@/assets/images/auto-parts/product6.jpg'
 import promoBrakes from '@/assets/images/auto-parts/promo-brakes.jpg'
 import promoOil from '@/assets/images/auto-parts/promo-oil.jpg'
 import promoBattery from '@/assets/images/auto-parts/promo-battery.jpg'
@@ -20,15 +20,7 @@ import companyLogo from '@/assets/images/satechitech-logo.png'
 import { StaticImageData } from 'next/image'
 import { type IconType } from 'react-icons'
 import { BsLightningFill, BsShieldCheck, BsTruck } from 'react-icons/bs'
-import {
-  FaBatteryFull,
-  FaCarBurst,
-  FaGaugeHigh,
-  FaLightbulb,
-  FaOilCan,
-  FaScrewdriverWrench,
-  FaStar,
-} from 'react-icons/fa6'
+import { FaBatteryFull, FaCarBurst, FaGaugeHigh, FaLightbulb, FaOilCan, FaScrewdriverWrench, FaStar } from 'react-icons/fa6'
 
 export const pageImages = {
   hero: heroImage,
@@ -40,12 +32,21 @@ export const companyInfo = {
   legalName: 'SATECHI TECH ENTERPRISES',
   logo: companyLogo,
   logoAlt: 'SATECHI TECH ENTERPRISES logo',
-  currency: 'N$',
+  currency: 'ZMW',
   tagline:
     'Your local auto parts supplier in Katima Mulilo — brakes, filters, oils, batteries, and accessories for cars, bakkies, and light commercial vehicles.',
   metaDescription:
     'SATECHI TECH ENTERPRISES supplies quality auto parts in Katima Mulilo, Namibia. Visit us or enquire on WhatsApp for brakes, filters, oils, batteries, and more.',
 }
+
+/** Client pricing rule: ZMW price = original N$ price + 75 (e.g. N$75 → ZMW 150). */
+export const ZMW_PRICE_OFFSET = 75
+
+export const formatPrice = (amount: number): string =>
+  `${companyInfo.currency} ${amount.toLocaleString('en-ZM', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  })}`
 
 export const autoPartsContact = {
   address: '41648 1/Shop E G JIMBARA MALL, MANSA',
@@ -161,28 +162,28 @@ export const featuredPartsData: FeaturedPartType[] = [
   {
     name: 'Front Brake Pad Set (Universal fit)',
     category: 'Brakes',
-    price: 450,
+    price: 525,
     rating: 4.8,
     image: featured1,
   },
   {
     name: 'Engine Oil Filter',
     category: 'Filters',
-    price: 120,
+    price: 195,
     rating: 4.6,
     image: featured2,
   },
   {
     name: 'H4 Headlamp Bulb Pair',
     category: 'Lighting',
-    price: 180,
+    price: 255,
     rating: 4.7,
     image: featured3,
   },
   {
     name: 'Rubber Floor Mat Set (4 pc)',
     category: 'Accessories',
-    price: 320,
+    price: 395,
     rating: 4.5,
     image: featured4,
   },
@@ -205,8 +206,8 @@ export const productsData: ProductType[] = [
     name: 'Rear Brake Shoe Set',
     category: 'Brakes',
     brand: 'RoadSafe',
-    price: 520,
-    salePrice: 465,
+    price: 595,
+    salePrice: 540,
     rating: 4.9,
     image: product1,
     badge: 'Popular',
@@ -216,7 +217,7 @@ export const productsData: ProductType[] = [
     name: 'Air Filter — Panel Type',
     category: 'Filters',
     brand: 'FilterPro',
-    price: 95,
+    price: 170,
     rating: 4.5,
     image: product2,
     stockLabel: 'In stock',
@@ -225,8 +226,8 @@ export const productsData: ProductType[] = [
     name: 'Shock Absorber (Front pair)',
     category: 'Suspension',
     brand: 'RideMax',
-    price: 1850,
-    salePrice: 1690,
+    price: 1925,
+    salePrice: 1765,
     rating: 4.7,
     image: product5,
     badge: 'Special',
@@ -236,7 +237,7 @@ export const productsData: ProductType[] = [
     name: '12V Car Battery 45Ah',
     category: 'Electrical',
     brand: 'PowerCell',
-    price: 2100,
+    price: 2175,
     rating: 4.8,
     image: product6,
     stockLabel: 'In stock',
@@ -245,7 +246,7 @@ export const productsData: ProductType[] = [
     name: 'Wiper Blade Set (2 pc)',
     category: 'Body',
     brand: 'ClearDrive',
-    price: 140,
+    price: 215,
     rating: 4.4,
     image: product7,
     stockLabel: 'In stock',
@@ -254,7 +255,7 @@ export const productsData: ProductType[] = [
     name: 'Side Mirror — Left',
     category: 'Body',
     brand: 'AutoFit',
-    price: 380,
+    price: 455,
     rating: 4.3,
     image: product8,
     badge: 'New',
@@ -264,8 +265,8 @@ export const productsData: ProductType[] = [
     name: 'Engine Oil 5W-30 (4L)',
     category: 'Lubricants',
     brand: 'LubeLine',
-    price: 420,
-    salePrice: 385,
+    price: 495,
+    salePrice: 460,
     rating: 4.6,
     image: product3,
     stockLabel: 'In stock',
@@ -274,7 +275,7 @@ export const productsData: ProductType[] = [
     name: 'Spark Plug Set (4 pc)',
     category: 'Engine',
     brand: 'Ignite',
-    price: 260,
+    price: 335,
     rating: 4.7,
     image: product4,
     stockLabel: 'In stock',
@@ -361,11 +362,4 @@ export const autoPartsFeatures: FeatureType[] = [
   },
 ]
 
-export const trustedBrandLabels: string[] = [
-  'Brake systems',
-  'Engine oils',
-  'Filters',
-  'Batteries',
-  'Lighting',
-  'Suspension',
-]
+export const trustedBrandLabels: string[] = ['Brake systems', 'Engine oils', 'Filters', 'Batteries', 'Lighting', 'Suspension']

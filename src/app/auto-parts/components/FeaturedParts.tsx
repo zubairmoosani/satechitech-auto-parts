@@ -1,4 +1,4 @@
-import { companyInfo, featuredPartsData, sectionCopy } from '@/app/auto-parts/data'
+import { featuredPartsData, formatPrice, sectionCopy } from '@/app/auto-parts/data'
 import Image from 'next/image'
 import { Card, CardBody, Col, Container, Row } from 'react-bootstrap'
 import { BsTag } from 'react-icons/bs'
@@ -33,8 +33,7 @@ const FeaturedParts = () => {
                   <h5 className="card-title">{part.name}</h5>
                   <div className="d-flex justify-content-between align-items-center">
                     <h6 className="text-success mb-0">
-                      {companyInfo.currency}
-                      {part.price}
+                      {formatPrice(part.price)}
                       <small className="fw-light"> /unit</small>
                     </h6>
                     <h6 className="mb-0 d-flex align-items-center">

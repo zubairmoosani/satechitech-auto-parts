@@ -1,4 +1,5 @@
 'use client'
+import CartButton from '@/app/auto-parts/components/CartButton'
 import { companyInfo } from '@/app/auto-parts/data'
 import { useScrollEvent, useToggle } from '@/hooks'
 import clsx from 'clsx'
@@ -70,6 +71,9 @@ const AutoPartsTopNav = () => {
                   )
                 })}
               </Nav>
+              <div className="d-flex align-items-center justify-content-lg-end pb-3 pb-lg-0">
+                <CartButton />
+              </div>
             </div>
           </Collapse>
         </Container>

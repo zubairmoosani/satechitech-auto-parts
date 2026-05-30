@@ -9,6 +9,7 @@ import { FaWhatsapp } from 'react-icons/fa6'
 const footerNav = [
   { label: 'Home', href: '/' },
   { label: 'Products', href: '/#products' },
+  { label: 'Cart', href: '/cart' },
   { label: 'About', href: '/#about-us' },
   { label: 'Contact', href: '/#contact-us' },
 ]

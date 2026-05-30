@@ -1,5 +1,5 @@
 'use client'
-import { AuthProvider, NotificationProvider } from '@/states'
+import { AuthProvider, CartProvider, NotificationProvider } from '@/states'
 import dynamic from 'next/dynamic'
 
 const LayoutProvider = dynamic(() => import('@/states/useLayoutContext').then((mod) => mod.LayoutProvider), {
@@ -10,7 +10,9 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
     <>
       <NotificationProvider>
         <LayoutProvider>
-          <AuthProvider>{children}</AuthProvider>
+          <AuthProvider>
+            <CartProvider>{children}</CartProvider>
+          </AuthProvider>
         </LayoutProvider>
       </NotificationProvider>
     </>

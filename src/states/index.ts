@@ -1,4 +1,5 @@
 export * from './constants'
+export * from './useCartContext'
 export * from './useAuthContext'
 export * from './useLayoutContext'
 export * from './useNotificationContext'
