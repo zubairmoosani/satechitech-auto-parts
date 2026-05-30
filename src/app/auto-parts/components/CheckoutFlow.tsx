@@ -25,6 +25,11 @@ const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] 
     label: 'Bank transfer',
     detail: 'Transfer to our business account. Order is processed once payment is confirmed.',
   },
+  {
+    value: 'dpo',
+    label: 'Pay with DPO',
+    detail: 'Pay securely online with card or mobile money via DPO Pay (ZMW).',
+  },
 ]
 
 const defaultDetails: CheckoutDetails = {
@@ -43,6 +48,7 @@ const CheckoutFlow = () => {
   const { showNotification } = useNotificationContext()
   const [step, setStep] = useState(1)
   const [details, setDetails] = useState<CheckoutDetails>(defaultDetails)
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false)
 
   const steps = useMemo(
     () => [
@@ -103,16 +109,55 @@ const CheckoutFlow = () => {
     setStep(3)
   }
 
-  const placeOrder = () => {
+  const placeOrder = async () => {
     const orderNumber = `ST-${Date.now().toString().slice(-8)}`
     const placedAt = new Date().toISOString()
-
-    savePlacedOrder({
+    const orderPayload = {
       orderNumber,
       items: [...items],
       subtotal,
       details,
       placedAt,
+    }
+
+    if (details.paymentMethod === 'dpo') {
+      setIsPlacingOrder(true)
+      try {
+        savePlacedOrder({
+          ...orderPayload,
+          details: { ...details, paymentMethod: 'dpo' },
+          paymentStatus: 'pending',
+        })
+
+        const response = await fetch('/api/dpo/create-payment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(orderPayload),
+        })
+
+        const data = (await response.json()) as { paymentUrl?: string; error?: string }
+
+        if (!response.ok || !data.paymentUrl) {
+          throw new Error(data.error ?? 'Could not start DPO payment')
+        }
+
+        clearCart()
+        window.location.href = data.paymentUrl
+        return
+      } catch (error) {
+        showNotification({
+          type: 'error',
+          title: 'Payment failed',
+          message: error instanceof Error ? error.message : 'Could not connect to DPO Pay.',
+        })
+        setIsPlacingOrder(false)
+        return
+      }
+    }
+
+    savePlacedOrder({
+      ...orderPayload,
+      paymentStatus: 'paid',
     })
 
     clearCart()
@@ -326,8 +371,12 @@ const CheckoutFlow = () => {
                     </li>
                   )}
                 </ul>
-                <Button type="button" variant="primary" onClick={placeOrder}>
-                  Place order — {formatPrice(subtotal)}
+                <Button type="button" variant="primary" onClick={placeOrder} disabled={isPlacingOrder}>
+                  {isPlacingOrder
+                    ? 'Redirecting to DPO Pay…'
+                    : details.paymentMethod === 'dpo'
+                      ? `Pay with DPO — ${formatPrice(subtotal)}`
+                      : `Place order — ${formatPrice(subtotal)}`}
                 </Button>
               </CardBody>
             </Card>

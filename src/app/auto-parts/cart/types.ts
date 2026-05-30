@@ -11,7 +11,9 @@ export type CartItem = {
 
 export type FulfilmentMethod = 'pickup' | 'delivery'
 
-export type PaymentMethod = 'mobile_money' | 'cash' | 'bank_transfer'
+export type PaymentMethod = 'mobile_money' | 'cash' | 'bank_transfer' | 'dpo'
+
+export type PaymentStatus = 'pending' | 'paid' | 'failed'
 
 export type CheckoutDetails = {
   fullName: string
@@ -29,4 +31,6 @@ export type PlacedOrder = {
   subtotal: number
   details: CheckoutDetails
   placedAt: string
+  paymentStatus?: PaymentStatus
+  dpoTransToken?: string
 }

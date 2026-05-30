@@ -7,25 +7,68 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { FaWhatsapp } from 'react-icons/fa6'
-import { Button, Card, CardBody, Col, Container, Row } from 'react-bootstrap'
+import { Card, CardBody, Col, Container, Row } from 'react-bootstrap'
 
 const paymentLabels = {
   mobile_money: 'Mobile money',
   cash: 'Cash on collection',
   bank_transfer: 'Bank transfer',
+  dpo: 'DPO Pay',
 } as const
 
 const OrderConfirmation = () => {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
-  const { getPlacedOrder } = useCartContext()
+  const transToken = searchParams.get('TransactionToken') ?? searchParams.get('TransToken') ?? searchParams.get('ID')
+  const transactionApproval = searchParams.get('TransactionApproval')
+  const { getPlacedOrder, savePlacedOrder } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
+  const [isVerifying, setIsVerifying] = useState(false)
 
   useEffect(() => {
-    if (orderNumber) {
-      setOrder(getPlacedOrder(orderNumber))
+    if (!orderNumber) return
+
+    const stored = getPlacedOrder(orderNumber)
+    if (stored) {
+      setOrder(stored)
     }
-  }, [orderNumber, getPlacedOrder])
+
+    const verifyDpoPayment = async () => {
+      if (stored?.details.paymentMethod !== 'dpo' && !transToken) return
+
+      setIsVerifying(true)
+      try {
+        const params = new URLSearchParams({ order: orderNumber })
+        if (transToken) params.set('transToken', transToken)
+
+        const response = await fetch(`/api/dpo/verify-order?${params.toString()}`)
+        const data = (await response.json()) as { paid?: boolean }
+
+        const isPaid =
+          data.paid ||
+          transactionApproval?.toUpperCase() === 'Y' ||
+          stored?.paymentStatus === 'paid'
+
+        if (stored && isPaid) {
+          const updated: PlacedOrder = {
+            ...stored,
+            paymentStatus: 'paid',
+            dpoTransToken: transToken ?? stored.dpoTransToken,
+          }
+          savePlacedOrder(updated)
+          setOrder(updated)
+        } else if (stored) {
+          setOrder(stored)
+        }
+      } catch {
+        if (stored) setOrder(stored)
+      } finally {
+        setIsVerifying(false)
+      }
+    }
+
+    verifyDpoPayment()
+  }, [orderNumber, transToken, transactionApproval, getPlacedOrder, savePlacedOrder])
 
   const whatsappMessage = useMemo(() => {
     if (!order) return ''
@@ -45,7 +88,31 @@ const OrderConfirmation = () => {
     return encodeURIComponent(lines.join('\n'))
   }, [order])
 
-  if (!orderNumber || !order) {
+  if (!orderNumber) {
+    return (
+      <Container className="py-5">
+        <Card className="shadow-sm border-0 text-center py-5">
+          <CardBody>
+            <h2 className="mb-3">Order not found</h2>
+            <p className="text-body-secondary mb-4">No order reference was provided.</p>
+            <Link href="/" className="btn btn-primary">
+              Back to home
+            </Link>
+          </CardBody>
+        </Card>
+      </Container>
+    )
+  }
+
+  if (isVerifying && !order) {
+    return (
+      <Container className="py-5 text-center">
+        <p className="text-body-secondary">Confirming your payment…</p>
+      </Container>
+    )
+  }
+
+  if (!order) {
     return (
       <Container className="py-5">
         <Card className="shadow-sm border-0 text-center py-5">
@@ -61,17 +128,33 @@ const OrderConfirmation = () => {
     )
   }
 
+  const isDpoPending = order.details.paymentMethod === 'dpo' && order.paymentStatus !== 'paid'
+
   return (
     <Container className="py-5">
       <Row className="justify-content-center">
         <Col lg={8}>
           <Card className="shadow-sm border-0">
             <CardBody className="p-4 p-md-5 text-center">
-              <div className="text-success display-6 mb-3">✓</div>
-              <h1 className="h3 mb-2">Thank you for your order</h1>
+              <div className={`display-6 mb-3 ${isDpoPending ? 'text-warning' : 'text-success'}`}>
+                {isDpoPending ? '…' : '✓'}
+              </div>
+              <h1 className="h3 mb-2">
+                {isDpoPending ? 'Payment pending' : 'Thank you for your order'}
+              </h1>
               <p className="text-body-secondary mb-4">
-                Order <strong>{order.orderNumber}</strong> has been received. We will contact you shortly to confirm payment
-                and availability.
+                {isDpoPending ? (
+                  <>
+                    Order <strong>{order.orderNumber}</strong> was created. Complete payment on DPO Pay, or contact us if
+                    you already paid.
+                  </>
+                ) : (
+                  <>
+                    Order <strong>{order.orderNumber}</strong> has been received
+                    {order.details.paymentMethod === 'dpo' ? ' and payment confirmed' : ''}. We will contact you shortly
+                    to confirm availability.
+                  </>
+                )}
               </p>
 
               <div className="bg-light rounded p-4 text-start mb-4">
