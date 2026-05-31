@@ -141,7 +141,6 @@ const CheckoutFlow = () => {
         throw new Error(data.error ?? `Could not start ${providerLabel} payment`)
       }
 
-      clearCart()
       window.location.href = data.paymentUrl
     } catch (error) {
       showNotification({

@@ -26,9 +26,20 @@ const CartDrawer = () => {
           <div className="text-center my-auto py-4">
             <FaCartShopping size={40} className="text-body-secondary mb-3" />
             <p className="text-body-secondary mb-3">Your cart is empty.</p>
-            <Button variant="primary" onClick={closeCart}>
+            <Link
+              href="/#products"
+              className="btn btn-primary"
+              onClick={() => {
+                closeCart()
+                if (window.location.pathname === '/') {
+                  window.setTimeout(() => {
+                    document.getElementById('products')?.scrollIntoView({ behavior: 'smooth' })
+                  }, 150)
+                }
+              }}
+            >
               Continue shopping
-            </Button>
+            </Link>
           </div>
         ) : (
           <>

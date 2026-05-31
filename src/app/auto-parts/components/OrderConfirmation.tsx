@@ -27,7 +27,7 @@ const OrderConfirmation = () => {
   const flutterwaveTransactionId = searchParams.get('transaction_id')
   const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
   const txRef = searchParams.get('tx_ref')
-  const { getPlacedOrder, savePlacedOrder } = useCartContext()
+  const { getPlacedOrder, savePlacedOrder, clearCart } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
@@ -37,6 +37,9 @@ const OrderConfirmation = () => {
     const stored = getPlacedOrder(orderNumber)
     if (stored) {
       setOrder(stored)
+      if (stored.paymentStatus === 'paid') {
+        clearCart()
+      }
     }
 
     const verifyOnlinePayment = async () => {
@@ -85,6 +88,7 @@ const OrderConfirmation = () => {
           }
           savePlacedOrder(updated)
           setOrder(updated)
+          clearCart()
         } else if (stored) {
           setOrder(stored)
         }
@@ -105,6 +109,7 @@ const OrderConfirmation = () => {
     txRef,
     getPlacedOrder,
     savePlacedOrder,
+    clearCart,
   ])
 
   const whatsappMessage = useMemo(() => {
