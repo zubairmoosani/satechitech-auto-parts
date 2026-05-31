@@ -18,10 +18,10 @@ export const getDpoPaymentUrl = (transToken: string) =>
   `${dpoConfig.payUrl}?ID=${encodeURIComponent(transToken)}`
 
 export const getDpoCallbackUrls = (orderNumber: string) => {
-  const { redirectUrl } = getPaymentCallbackUrls(orderNumber)
   const base = getPaymentPublicBaseUrl()
+  const { redirectUrl } = getPaymentCallbackUrls(orderNumber)
   return {
     redirectUrl,
-    backUrl: `${base}/api/dpo/callback`,
+    backUrl: `${base}/checkout/confirmation?order=${encodeURIComponent(orderNumber)}&payment=cancelled`,
   }
 }

@@ -27,6 +27,7 @@ const OrderConfirmation = () => {
   const flutterwaveTransactionId = searchParams.get('transaction_id')
   const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
   const txRef = searchParams.get('tx_ref')
+  const paymentCancelled = searchParams.get('payment') === 'cancelled'
   const { getPlacedOrder, savePlacedOrder, clearCart } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -43,6 +44,8 @@ const OrderConfirmation = () => {
     }
 
     const verifyOnlinePayment = async () => {
+      if (paymentCancelled) return
+
       const method = stored?.details.paymentMethod
       const isDpo = method === 'dpo' || !!transToken
       const isFlutterwave =
@@ -107,6 +110,7 @@ const OrderConfirmation = () => {
     flutterwaveTransactionId,
     flutterwaveStatus,
     txRef,
+    paymentCancelled,
     getPlacedOrder,
     savePlacedOrder,
     clearCart,
@@ -171,6 +175,7 @@ const OrderConfirmation = () => {
   }
 
   const isOnlinePending =
+    !paymentCancelled &&
     onlinePaymentMethods.includes(order.details.paymentMethod as (typeof onlinePaymentMethods)[number]) &&
     order.paymentStatus !== 'paid'
   const onlineProviderLabel = order.details.paymentMethod === 'flutterwave' ? 'Flutterwave' : 'DPO Pay'
@@ -181,14 +186,21 @@ const OrderConfirmation = () => {
         <Col lg={8}>
           <Card className="shadow-sm border-0">
             <CardBody className="p-4 p-md-5 text-center">
-              <div className={`display-6 mb-3 ${isOnlinePending ? 'text-warning' : 'text-success'}`}>
-                {isOnlinePending ? '…' : '✓'}
+              <div
+                className={`display-6 mb-3 ${paymentCancelled ? 'text-danger' : isOnlinePending ? 'text-warning' : 'text-success'}`}
+              >
+                {paymentCancelled ? '×' : isOnlinePending ? '…' : '✓'}
               </div>
               <h1 className="h3 mb-2">
-                {isOnlinePending ? 'Payment pending' : 'Thank you for your order'}
+                {paymentCancelled ? 'Payment cancelled' : isOnlinePending ? 'Payment pending' : 'Thank you for your order'}
               </h1>
               <p className="text-body-secondary mb-4">
-                {isOnlinePending ? (
+                {paymentCancelled ? (
+                  <>
+                    Payment for order <strong>{order.orderNumber}</strong> was not completed. Your cart items are still
+                    saved — you can return to checkout and try again.
+                  </>
+                ) : isOnlinePending ? (
                   <>
                     Order <strong>{order.orderNumber}</strong> was created. Complete payment on {onlineProviderLabel}, or
                     contact us if you already paid.
@@ -222,18 +234,31 @@ const OrderConfirmation = () => {
               </div>
 
               <div className="d-grid d-sm-flex justify-content-sm-center gap-2">
-                <Link
-                  href={`${autoPartsContact.whatsappHref}?text=${whatsappMessage}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-success flex-centered gap-2"
-                >
-                  <FaWhatsapp />
-                  Confirm on WhatsApp
-                </Link>
-                <Link href="/#products" className="btn btn-outline-primary">
-                  Continue shopping
-                </Link>
+                {paymentCancelled ? (
+                  <>
+                    <Link href="/checkout" className="btn btn-primary">
+                      Return to checkout
+                    </Link>
+                    <Link href="/#products" className="btn btn-outline-primary">
+                      Continue shopping
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      href={`${autoPartsContact.whatsappHref}?text=${whatsappMessage}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-success flex-centered gap-2"
+                    >
+                      <FaWhatsapp />
+                      Confirm on WhatsApp
+                    </Link>
+                    <Link href="/#products" className="btn btn-outline-primary">
+                      Continue shopping
+                    </Link>
+                  </>
+                )}
               </div>
             </CardBody>
           </Card>

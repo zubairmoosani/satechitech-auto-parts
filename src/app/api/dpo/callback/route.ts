@@ -1,5 +1,6 @@
 import { verifyDpoToken } from '@/lib/dpo'
 import { markPendingDpoOrderPaid } from '@/lib/dpo/pendingOrders'
+import { getPaymentPublicBaseUrl } from '@/lib/payments/siteUrl'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -29,17 +30,17 @@ const readCallbackParams = async (request: Request) => {
 }
 
 export async function GET(request: Request) {
-  return handleCallback(await readCallbackParams(request))
+  return handleCallback(await readCallbackParams(request), 'GET')
 }
 
 export async function POST(request: Request) {
-  return handleCallback(await readCallbackParams(request))
+  return handleCallback(await readCallbackParams(request), 'POST')
 }
 
-async function handleCallback(params: Record<string, string>) {
-  const companyRef = params.CompanyRef ?? params.companyRef
+async function handleCallback(params: Record<string, string>, method: string) {
+  const companyRef = params.CompanyRef ?? params.companyRef ?? params.PnrID
   const transToken = params.TransactionToken ?? params.TransToken ?? params.ID
-  const approval = params.TransactionApproval ?? params.transactionApproval
+  const approval = params.TransactionApproval ?? params.transactionApproval ?? params.CCDapproval
 
   if (companyRef && transToken) {
     try {
@@ -53,6 +54,17 @@ async function handleCallback(params: Record<string, string>) {
         markPendingDpoOrderPaid(companyRef)
       }
     }
+  }
+
+  if (method === 'GET' && companyRef) {
+    const base = getPaymentPublicBaseUrl()
+    const searchParams = new URLSearchParams({ order: companyRef })
+    if (transToken) searchParams.set('TransactionToken', transToken)
+    if (approval?.toUpperCase() !== 'Y') {
+      searchParams.set('payment', 'cancelled')
+    }
+
+    return NextResponse.redirect(`${base}/checkout/confirmation?${searchParams.toString()}`)
   }
 
   return NextResponse.json({ received: true })
