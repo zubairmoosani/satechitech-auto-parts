@@ -11,24 +11,14 @@ import { Button, Card, CardBody, Col, Container, Form, Row } from 'react-bootstr
 
 const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] = [
   {
-    value: 'mobile_money',
-    label: 'Mobile money',
-    detail: 'Pay via Airtel Money or MTN MoMo. We will send payment instructions after you place the order.',
-  },
-  {
-    value: 'cash',
-    label: 'Cash on collection',
-    detail: 'Pay in cash when you collect your order from our shop in Mansa.',
-  },
-  {
-    value: 'bank_transfer',
-    label: 'Bank transfer',
-    detail: 'Transfer to our business account. Order is processed once payment is confirmed.',
-  },
-  {
     value: 'dpo',
     label: 'Pay with DPO',
     detail: 'Pay securely online with card or mobile money via DPO Pay (ZMW).',
+  },
+  {
+    value: 'flutterwave',
+    label: 'Pay with Flutterwave',
+    detail: 'Pay with card, mobile money, or bank via Flutterwave (ZMW). Email required.',
   },
 ]
 
@@ -38,7 +28,7 @@ const defaultDetails: CheckoutDetails = {
   email: '',
   fulfilment: 'pickup',
   address: '',
-  paymentMethod: 'mobile_money',
+  paymentMethod: 'dpo',
   notes: '',
 }
 
@@ -109,6 +99,60 @@ const CheckoutFlow = () => {
     setStep(3)
   }
 
+  const startOnlinePayment = async (paymentMethod: 'dpo' | 'flutterwave') => {
+    if (paymentMethod === 'flutterwave' && !details.email.trim()) {
+      showNotification({
+        type: 'error',
+        title: 'Email required',
+        message: 'Enter your email in step 2 for Flutterwave payments.',
+      })
+      return
+    }
+
+    const orderNumber = `ST-${Date.now().toString().slice(-8)}`
+    const placedAt = new Date().toISOString()
+    const orderPayload = {
+      orderNumber,
+      items: [...items],
+      subtotal,
+      details: { ...details, paymentMethod },
+      placedAt,
+    }
+
+    const apiPath = paymentMethod === 'dpo' ? '/api/dpo/create-payment' : '/api/flutterwave/create-payment'
+    const providerLabel = paymentMethod === 'dpo' ? 'DPO Pay' : 'Flutterwave'
+
+    setIsPlacingOrder(true)
+    try {
+      savePlacedOrder({
+        ...orderPayload,
+        paymentStatus: 'pending',
+      })
+
+      const response = await fetch(apiPath, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(orderPayload),
+      })
+
+      const data = (await response.json()) as { paymentUrl?: string; error?: string }
+
+      if (!response.ok || !data.paymentUrl) {
+        throw new Error(data.error ?? `Could not start ${providerLabel} payment`)
+      }
+
+      clearCart()
+      window.location.href = data.paymentUrl
+    } catch (error) {
+      showNotification({
+        type: 'error',
+        title: 'Payment failed',
+        message: error instanceof Error ? error.message : `Could not connect to ${providerLabel}.`,
+      })
+      setIsPlacingOrder(false)
+    }
+  }
+
   const placeOrder = async () => {
     const orderNumber = `ST-${Date.now().toString().slice(-8)}`
     const placedAt = new Date().toISOString()
@@ -120,39 +164,9 @@ const CheckoutFlow = () => {
       placedAt,
     }
 
-    if (details.paymentMethod === 'dpo') {
-      setIsPlacingOrder(true)
-      try {
-        savePlacedOrder({
-          ...orderPayload,
-          details: { ...details, paymentMethod: 'dpo' },
-          paymentStatus: 'pending',
-        })
-
-        const response = await fetch('/api/dpo/create-payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(orderPayload),
-        })
-
-        const data = (await response.json()) as { paymentUrl?: string; error?: string }
-
-        if (!response.ok || !data.paymentUrl) {
-          throw new Error(data.error ?? 'Could not start DPO payment')
-        }
-
-        clearCart()
-        window.location.href = data.paymentUrl
-        return
-      } catch (error) {
-        showNotification({
-          type: 'error',
-          title: 'Payment failed',
-          message: error instanceof Error ? error.message : 'Could not connect to DPO Pay.',
-        })
-        setIsPlacingOrder(false)
-        return
-      }
+    if (details.paymentMethod === 'dpo' || details.paymentMethod === 'flutterwave') {
+      await startOnlinePayment(details.paymentMethod)
+      return
     }
 
     savePlacedOrder({
@@ -331,6 +345,9 @@ const CheckoutFlow = () => {
                     </label>
                   ))}
                 </div>
+                {details.paymentMethod === 'flutterwave' && !details.email.trim() && (
+                  <p className="small text-danger mt-3 mb-0">Email is required for Flutterwave. Go back to step 2 to add it.</p>
+                )}
                 <Button type="button" className="mt-4" onClick={() => setStep(4)}>
                   Review order
                 </Button>
@@ -373,10 +390,16 @@ const CheckoutFlow = () => {
                 </ul>
                 <Button type="button" variant="primary" onClick={placeOrder} disabled={isPlacingOrder}>
                   {isPlacingOrder
-                    ? 'Redirecting to DPO Pay…'
+                    ? details.paymentMethod === 'flutterwave'
+                      ? 'Redirecting to Flutterwave…'
+                      : details.paymentMethod === 'dpo'
+                        ? 'Redirecting to DPO Pay…'
+                        : 'Placing order…'
                     : details.paymentMethod === 'dpo'
                       ? `Pay with DPO — ${formatPrice(subtotal)}`
-                      : `Place order — ${formatPrice(subtotal)}`}
+                      : details.paymentMethod === 'flutterwave'
+                        ? `Pay with Flutterwave — ${formatPrice(subtotal)}`
+                        : `Place order — ${formatPrice(subtotal)}`}
                 </Button>
               </CardBody>
             </Card>

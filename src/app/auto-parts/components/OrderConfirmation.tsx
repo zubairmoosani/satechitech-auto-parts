@@ -14,13 +14,19 @@ const paymentLabels = {
   cash: 'Cash on collection',
   bank_transfer: 'Bank transfer',
   dpo: 'DPO Pay',
+  flutterwave: 'Flutterwave',
 } as const
+
+const onlinePaymentMethods = ['dpo', 'flutterwave'] as const
 
 const OrderConfirmation = () => {
   const searchParams = useSearchParams()
   const orderNumber = searchParams.get('order')
   const transToken = searchParams.get('TransactionToken') ?? searchParams.get('TransToken') ?? searchParams.get('ID')
   const transactionApproval = searchParams.get('TransactionApproval')
+  const flutterwaveTransactionId = searchParams.get('transaction_id')
+  const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
+  const txRef = searchParams.get('tx_ref')
   const { getPlacedOrder, savePlacedOrder } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -33,27 +39,49 @@ const OrderConfirmation = () => {
       setOrder(stored)
     }
 
-    const verifyDpoPayment = async () => {
-      if (stored?.details.paymentMethod !== 'dpo' && !transToken) return
+    const verifyOnlinePayment = async () => {
+      const method = stored?.details.paymentMethod
+      const isDpo = method === 'dpo' || !!transToken
+      const isFlutterwave =
+        method === 'flutterwave' || !!flutterwaveTransactionId || (txRef && flutterwaveStatus !== null)
+
+      if (!isDpo && !isFlutterwave) return
 
       setIsVerifying(true)
       try {
-        const params = new URLSearchParams({ order: orderNumber })
-        if (transToken) params.set('transToken', transToken)
+        let isPaid = stored?.paymentStatus === 'paid'
 
-        const response = await fetch(`/api/dpo/verify-order?${params.toString()}`)
-        const data = (await response.json()) as { paid?: boolean }
+        if (isDpo && (method === 'dpo' || transToken)) {
+          const params = new URLSearchParams({ order: orderNumber })
+          if (transToken) params.set('transToken', transToken)
 
-        const isPaid =
-          data.paid ||
-          transactionApproval?.toUpperCase() === 'Y' ||
-          stored?.paymentStatus === 'paid'
+          const response = await fetch(`/api/dpo/verify-order?${params.toString()}`)
+          const data = (await response.json()) as { paid?: boolean }
+
+          isPaid =
+            data.paid ||
+            transactionApproval?.toUpperCase() === 'Y' ||
+            stored?.paymentStatus === 'paid'
+        }
+
+        if (isFlutterwave && (method === 'flutterwave' || flutterwaveTransactionId || flutterwaveStatus)) {
+          const params = new URLSearchParams({ order: orderNumber })
+          if (flutterwaveTransactionId) params.set('transaction_id', flutterwaveTransactionId)
+          if (txRef) params.set('tx_ref', txRef)
+          if (flutterwaveStatus) params.set('status', flutterwaveStatus)
+
+          const response = await fetch(`/api/flutterwave/verify-order?${params.toString()}`)
+          const data = (await response.json()) as { paid?: boolean }
+
+          isPaid = data.paid || flutterwaveStatus === 'successful' || flutterwaveStatus === 'completed' || isPaid
+        }
 
         if (stored && isPaid) {
           const updated: PlacedOrder = {
             ...stored,
             paymentStatus: 'paid',
             dpoTransToken: transToken ?? stored.dpoTransToken,
+            flutterwaveTransactionId: flutterwaveTransactionId ?? stored.flutterwaveTransactionId,
           }
           savePlacedOrder(updated)
           setOrder(updated)
@@ -67,8 +95,17 @@ const OrderConfirmation = () => {
       }
     }
 
-    verifyDpoPayment()
-  }, [orderNumber, transToken, transactionApproval, getPlacedOrder, savePlacedOrder])
+    verifyOnlinePayment()
+  }, [
+    orderNumber,
+    transToken,
+    transactionApproval,
+    flutterwaveTransactionId,
+    flutterwaveStatus,
+    txRef,
+    getPlacedOrder,
+    savePlacedOrder,
+  ])
 
   const whatsappMessage = useMemo(() => {
     if (!order) return ''
@@ -128,7 +165,10 @@ const OrderConfirmation = () => {
     )
   }
 
-  const isDpoPending = order.details.paymentMethod === 'dpo' && order.paymentStatus !== 'paid'
+  const isOnlinePending =
+    onlinePaymentMethods.includes(order.details.paymentMethod as (typeof onlinePaymentMethods)[number]) &&
+    order.paymentStatus !== 'paid'
+  const onlineProviderLabel = order.details.paymentMethod === 'flutterwave' ? 'Flutterwave' : 'DPO Pay'
 
   return (
     <Container className="py-5">
@@ -136,23 +176,25 @@ const OrderConfirmation = () => {
         <Col lg={8}>
           <Card className="shadow-sm border-0">
             <CardBody className="p-4 p-md-5 text-center">
-              <div className={`display-6 mb-3 ${isDpoPending ? 'text-warning' : 'text-success'}`}>
-                {isDpoPending ? '…' : '✓'}
+              <div className={`display-6 mb-3 ${isOnlinePending ? 'text-warning' : 'text-success'}`}>
+                {isOnlinePending ? '…' : '✓'}
               </div>
               <h1 className="h3 mb-2">
-                {isDpoPending ? 'Payment pending' : 'Thank you for your order'}
+                {isOnlinePending ? 'Payment pending' : 'Thank you for your order'}
               </h1>
               <p className="text-body-secondary mb-4">
-                {isDpoPending ? (
+                {isOnlinePending ? (
                   <>
-                    Order <strong>{order.orderNumber}</strong> was created. Complete payment on DPO Pay, or contact us if
-                    you already paid.
+                    Order <strong>{order.orderNumber}</strong> was created. Complete payment on {onlineProviderLabel}, or
+                    contact us if you already paid.
                   </>
                 ) : (
                   <>
                     Order <strong>{order.orderNumber}</strong> has been received
-                    {order.details.paymentMethod === 'dpo' ? ' and payment confirmed' : ''}. We will contact you shortly
-                    to confirm availability.
+                    {onlinePaymentMethods.includes(order.details.paymentMethod as (typeof onlinePaymentMethods)[number])
+                      ? ' and payment confirmed'
+                      : ''}
+                    . We will contact you shortly to confirm availability.
                   </>
                 )}
               </p>
