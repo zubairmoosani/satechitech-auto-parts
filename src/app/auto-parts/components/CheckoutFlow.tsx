@@ -23,9 +23,9 @@ const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] 
 ]
 
 const defaultDetails: CheckoutDetails = {
-  fullName: 'test',
-  phone: '0977161341',
-  email: 's@g.com',
+  fullName: '',
+  phone: '',
+  email: '',
   fulfilment: 'pickup',
   address: '',
   paymentMethod: 'dpo',
