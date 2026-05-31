@@ -19,6 +19,7 @@ type CartContextType = {
   clearCart: () => void
   savePlacedOrder: (order: PlacedOrder) => void
   getPlacedOrder: (orderNumber: string) => PlacedOrder | null
+  findPlacedOrder: (ref: string | null | undefined) => PlacedOrder | null
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -127,6 +128,33 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
     }
   }, [])
 
+  const findPlacedOrder = useCallback(
+    (ref: string | null | undefined) => {
+      const normalized = ref?.trim()
+      if (!normalized) return null
+
+      const direct = getPlacedOrder(normalized)
+      if (direct) return direct
+
+      if (typeof window === 'undefined') return null
+
+      for (let index = 0; index < localStorage.length; index += 1) {
+        const key = localStorage.key(index)
+        if (!key?.startsWith('satechitech_order_')) continue
+
+        try {
+          const stored = JSON.parse(localStorage.getItem(key) ?? '') as PlacedOrder
+          if (stored.orderNumber === normalized) return stored
+        } catch {
+          continue
+        }
+      }
+
+      return null
+    },
+    [getPlacedOrder],
+  )
+
   const value = useMemo(
     () => ({
       items,
@@ -141,8 +169,9 @@ export function CartProvider({ children }: Readonly<{ children: ReactNode }>) {
       clearCart,
       savePlacedOrder,
       getPlacedOrder,
+      findPlacedOrder,
     }),
-    [items, itemCount, subtotal, isCartOpen, addItem, removeItem, updateQuantity, clearCart, savePlacedOrder, getPlacedOrder],
+    [items, itemCount, subtotal, isCartOpen, addItem, removeItem, updateQuantity, clearCart, savePlacedOrder, getPlacedOrder, findPlacedOrder],
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

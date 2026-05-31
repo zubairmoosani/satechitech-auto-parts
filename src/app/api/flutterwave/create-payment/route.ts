@@ -1,7 +1,7 @@
 import type { CartItem, CheckoutDetails } from '@/app/auto-parts/cart/types'
 import { companyInfo } from '@/app/auto-parts/data'
 import { assertFlutterwaveConfigured, createFlutterwavePayment, FlutterwaveApiError } from '@/lib/flutterwave'
-import { assertPaymentPublicBaseUrl, getPaymentCallbackUrls } from '@/lib/payments/siteUrl'
+import { assertPaymentPublicBaseUrl, getPaymentPublicBaseUrl } from '@/lib/payments/siteUrl'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -29,7 +29,8 @@ export async function POST(request: Request) {
     assertPaymentPublicBaseUrl()
     assertFlutterwaveConfigured()
 
-    const { redirectUrl } = getPaymentCallbackUrls(body.orderNumber)
+    const base = getPaymentPublicBaseUrl()
+    const redirectUrl = `${base}/api/flutterwave/callback`
     const description = body.items.map((item) => `${item.name} x${item.quantity}`).join(', ').slice(0, 200)
 
     const result = await createFlutterwavePayment({

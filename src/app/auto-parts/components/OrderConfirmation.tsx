@@ -21,21 +21,25 @@ const onlinePaymentMethods = ['dpo', 'flutterwave'] as const
 
 const OrderConfirmation = () => {
   const searchParams = useSearchParams()
-  const orderNumber = searchParams.get('order')
+  const orderFromQuery = searchParams.get('order')?.trim()
+  const txRef = searchParams.get('tx_ref')?.trim()
+  const orderNumber = orderFromQuery || txRef || null
   const transToken = searchParams.get('TransactionToken') ?? searchParams.get('TransToken') ?? searchParams.get('ID')
   const transactionApproval = searchParams.get('TransactionApproval')
   const flutterwaveTransactionId = searchParams.get('transaction_id')
   const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
-  const txRef = searchParams.get('tx_ref')
-  const paymentCancelled = searchParams.get('payment') === 'cancelled'
-  const { getPlacedOrder, savePlacedOrder, clearCart } = useCartContext()
+  const paymentCancelled =
+    searchParams.get('payment') === 'cancelled' ||
+    flutterwaveStatus === 'cancelled' ||
+    flutterwaveStatus === 'failed'
+  const { findPlacedOrder, savePlacedOrder, clearCart } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
 
   useEffect(() => {
     if (!orderNumber) return
 
-    const stored = getPlacedOrder(orderNumber)
+    const stored = findPlacedOrder(orderNumber)
     if (stored) {
       setOrder(stored)
       if (stored.paymentStatus === 'paid') {
@@ -71,15 +75,19 @@ const OrderConfirmation = () => {
         }
 
         if (isFlutterwave && (method === 'flutterwave' || flutterwaveTransactionId || flutterwaveStatus)) {
-          const params = new URLSearchParams({ order: orderNumber })
-          if (flutterwaveTransactionId) params.set('transaction_id', flutterwaveTransactionId)
-          if (txRef) params.set('tx_ref', txRef)
-          if (flutterwaveStatus) params.set('status', flutterwaveStatus)
+          if (flutterwaveStatus === 'cancelled' || flutterwaveStatus === 'failed') {
+            isPaid = false
+          } else {
+            const params = new URLSearchParams({ order: orderNumber })
+            if (flutterwaveTransactionId) params.set('transaction_id', flutterwaveTransactionId)
+            if (txRef) params.set('tx_ref', txRef)
+            if (flutterwaveStatus) params.set('status', flutterwaveStatus)
 
-          const response = await fetch(`/api/flutterwave/verify-order?${params.toString()}`)
-          const data = (await response.json()) as { paid?: boolean }
+            const response = await fetch(`/api/flutterwave/verify-order?${params.toString()}`)
+            const data = (await response.json()) as { paid?: boolean }
 
-          isPaid = data.paid || flutterwaveStatus === 'successful' || flutterwaveStatus === 'completed' || isPaid
+            isPaid = data.paid || flutterwaveStatus === 'successful' || flutterwaveStatus === 'completed' || isPaid
+          }
         }
 
         if (stored && isPaid) {
@@ -111,7 +119,7 @@ const OrderConfirmation = () => {
     flutterwaveStatus,
     txRef,
     paymentCancelled,
-    getPlacedOrder,
+    findPlacedOrder,
     savePlacedOrder,
     clearCart,
   ])
@@ -134,7 +142,7 @@ const OrderConfirmation = () => {
     return encodeURIComponent(lines.join('\n'))
   }, [order])
 
-  if (!orderNumber) {
+  if (!orderNumber && !paymentCancelled) {
     return (
       <Container className="py-5">
         <Card className="shadow-sm border-0 text-center py-5">
@@ -154,6 +162,41 @@ const OrderConfirmation = () => {
     return (
       <Container className="py-5 text-center">
         <p className="text-body-secondary">Confirming your payment…</p>
+      </Container>
+    )
+  }
+
+  if (!order && paymentCancelled) {
+    return (
+      <Container className="py-5">
+        <Row className="justify-content-center">
+          <Col lg={8}>
+            <Card className="shadow-sm border-0">
+              <CardBody className="p-4 p-md-5 text-center">
+                <div className="display-6 mb-3 text-danger">×</div>
+                <h1 className="h3 mb-2">Payment cancelled</h1>
+                <p className="text-body-secondary mb-4">
+                  {orderNumber ? (
+                    <>
+                      Payment for order <strong>{orderNumber}</strong> was not completed. Your cart items are still
+                      saved — you can return to checkout and try again.
+                    </>
+                  ) : (
+                    <>Your payment was not completed. Your cart items are still saved — you can return to checkout and try again.</>
+                  )}
+                </p>
+                <div className="d-grid d-sm-flex justify-content-sm-center gap-2">
+                  <Link href="/checkout" className="btn btn-primary">
+                    Return to checkout
+                  </Link>
+                  <Link href="/#products" className="btn btn-outline-primary">
+                    Continue shopping
+                  </Link>
+                </div>
+              </CardBody>
+            </Card>
+          </Col>
+        </Row>
       </Container>
     )
   }
