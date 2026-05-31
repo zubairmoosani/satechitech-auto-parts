@@ -15,23 +15,26 @@ const paymentLabels = {
   bank_transfer: 'Bank transfer',
   dpo: 'DPO Pay',
   flutterwave: 'Flutterwave',
+  lenco: 'Lenco',
 } as const
 
-const onlinePaymentMethods = ['dpo', 'flutterwave'] as const
+const onlinePaymentMethods = ['dpo', 'flutterwave', 'lenco'] as const
 
 const OrderConfirmation = () => {
   const searchParams = useSearchParams()
   const orderFromQuery = searchParams.get('order')?.trim()
   const txRef = searchParams.get('tx_ref')?.trim()
-  const orderNumber = orderFromQuery || txRef || null
+  const lencoReference = searchParams.get('reference')?.trim()
+  const orderNumber = orderFromQuery || txRef || lencoReference || null
   const transToken = searchParams.get('TransactionToken') ?? searchParams.get('TransToken') ?? searchParams.get('ID')
   const transactionApproval = searchParams.get('TransactionApproval')
   const flutterwaveTransactionId = searchParams.get('transaction_id')
   const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
+  const lencoStatus = searchParams.get('status')?.toLowerCase()
   const paymentCancelled =
     searchParams.get('payment') === 'cancelled' ||
-    flutterwaveStatus === 'cancelled' ||
-    flutterwaveStatus === 'failed'
+    (flutterwaveStatus === 'cancelled' || flutterwaveStatus === 'failed') ||
+    ((lencoStatus === 'failed' || lencoStatus === 'cancelled') && !!lencoReference)
   const { findPlacedOrder, savePlacedOrder, clearCart } = useCartContext()
   const [order, setOrder] = useState<PlacedOrder | null>(null)
   const [isVerifying, setIsVerifying] = useState(false)
@@ -53,9 +56,10 @@ const OrderConfirmation = () => {
       const method = stored?.details.paymentMethod
       const isDpo = method === 'dpo' || !!transToken
       const isFlutterwave =
-        method === 'flutterwave' || !!flutterwaveTransactionId || (txRef && flutterwaveStatus !== null)
+        method === 'flutterwave' || !!flutterwaveTransactionId || (!!txRef && method !== 'lenco')
+      const isLenco = method === 'lenco' || !!lencoReference
 
-      if (!isDpo && !isFlutterwave) return
+      if (!isDpo && !isFlutterwave && !isLenco) return
 
       setIsVerifying(true)
       try {
@@ -90,12 +94,28 @@ const OrderConfirmation = () => {
           }
         }
 
+        if (isLenco && (method === 'lenco' || lencoReference || lencoStatus)) {
+          if (lencoStatus === 'cancelled' || lencoStatus === 'failed') {
+            isPaid = false
+          } else {
+            const params = new URLSearchParams({ order: orderNumber })
+            params.set('reference', lencoReference ?? orderNumber)
+            if (lencoStatus) params.set('status', lencoStatus)
+
+            const response = await fetch(`/api/lenco/verify-order?${params.toString()}`)
+            const data = (await response.json()) as { paid?: boolean }
+
+            isPaid = data.paid || lencoStatus === 'successful' || isPaid
+          }
+        }
+
         if (stored && isPaid) {
           const updated: PlacedOrder = {
             ...stored,
             paymentStatus: 'paid',
             dpoTransToken: transToken ?? stored.dpoTransToken,
             flutterwaveTransactionId: flutterwaveTransactionId ?? stored.flutterwaveTransactionId,
+            lencoReference: lencoReference ?? stored.lencoReference ?? orderNumber,
           }
           savePlacedOrder(updated)
           setOrder(updated)
@@ -118,6 +138,8 @@ const OrderConfirmation = () => {
     flutterwaveTransactionId,
     flutterwaveStatus,
     txRef,
+    lencoReference,
+    lencoStatus,
     paymentCancelled,
     findPlacedOrder,
     savePlacedOrder,
@@ -221,7 +243,12 @@ const OrderConfirmation = () => {
     !paymentCancelled &&
     onlinePaymentMethods.includes(order.details.paymentMethod as (typeof onlinePaymentMethods)[number]) &&
     order.paymentStatus !== 'paid'
-  const onlineProviderLabel = order.details.paymentMethod === 'flutterwave' ? 'Flutterwave' : 'DPO Pay'
+  const onlineProviderLabel =
+    order.details.paymentMethod === 'flutterwave'
+      ? 'Flutterwave'
+      : order.details.paymentMethod === 'lenco'
+        ? 'Lenco'
+        : 'DPO Pay'
 
   return (
     <Container className="py-5">

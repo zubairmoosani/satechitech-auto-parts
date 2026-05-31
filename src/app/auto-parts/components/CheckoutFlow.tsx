@@ -1,6 +1,7 @@
 'use client'
 
 import type { CheckoutDetails, FulfilmentMethod, PaymentMethod } from '@/app/auto-parts/cart/types'
+import { openLencoWidget, type LencoWidgetConfig } from '@/app/auto-parts/utils/openLencoWidget'
 import { autoPartsContact, formatPrice } from '@/app/auto-parts/data'
 import { useCartContext, useNotificationContext } from '@/states'
 import Link from 'next/link'
@@ -19,6 +20,11 @@ const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] 
     value: 'flutterwave',
     label: 'Pay with Flutterwave',
     detail: 'Pay with card, mobile money, or bank via Flutterwave (ZMW). Email required.',
+  },
+  {
+    value: 'lenco',
+    label: 'Pay with Lenco',
+    detail: 'Pay with card or mobile money (Airtel, MTN, Zamtel) via Lenco (ZMW). Email required.',
   },
 ]
 
@@ -99,12 +105,12 @@ const CheckoutFlow = () => {
     setStep(3)
   }
 
-  const startOnlinePayment = async (paymentMethod: 'dpo' | 'flutterwave') => {
-    if (paymentMethod === 'flutterwave' && !details.email.trim()) {
+  const startOnlinePayment = async (paymentMethod: 'dpo' | 'flutterwave' | 'lenco') => {
+    if ((paymentMethod === 'flutterwave' || paymentMethod === 'lenco') && !details.email.trim()) {
       showNotification({
         type: 'error',
         title: 'Email required',
-        message: 'Enter your email in step 2 for Flutterwave payments.',
+        message: `Enter your email in step 2 for ${paymentMethod === 'lenco' ? 'Lenco' : 'Flutterwave'} payments.`,
       })
       return
     }
@@ -119,8 +125,8 @@ const CheckoutFlow = () => {
       placedAt,
     }
 
-    const apiPath = paymentMethod === 'dpo' ? '/api/dpo/create-payment' : '/api/flutterwave/create-payment'
-    const providerLabel = paymentMethod === 'dpo' ? 'DPO Pay' : 'Flutterwave'
+    const providerLabel =
+      paymentMethod === 'dpo' ? 'DPO Pay' : paymentMethod === 'lenco' ? 'Lenco' : 'Flutterwave'
 
     setIsPlacingOrder(true)
     try {
@@ -129,11 +135,38 @@ const CheckoutFlow = () => {
         paymentStatus: 'pending',
       })
 
+      const apiPath =
+        paymentMethod === 'dpo'
+          ? '/api/dpo/create-payment'
+          : paymentMethod === 'flutterwave'
+            ? '/api/flutterwave/create-payment'
+            : '/api/lenco/create-payment'
+
       const response = await fetch(apiPath, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(orderPayload),
       })
+
+      if (paymentMethod === 'lenco') {
+        const data = (await response.json()) as { widget?: LencoWidgetConfig; error?: string }
+
+        if (!response.ok || !data.widget) {
+          throw new Error(data.error ?? 'Could not start Lenco payment')
+        }
+
+        await openLencoWidget(data.widget, {
+          onSuccess: () => {
+            window.location.href = `/checkout/confirmation?order=${encodeURIComponent(orderNumber)}&reference=${encodeURIComponent(orderNumber)}`
+          },
+          onClose: () => {
+            window.location.href = `/checkout/confirmation?order=${encodeURIComponent(orderNumber)}&payment=cancelled`
+          },
+        })
+
+        setIsPlacingOrder(false)
+        return
+      }
 
       const data = (await response.json()) as { paymentUrl?: string; error?: string }
 
@@ -163,7 +196,7 @@ const CheckoutFlow = () => {
       placedAt,
     }
 
-    if (details.paymentMethod === 'dpo' || details.paymentMethod === 'flutterwave') {
+    if (details.paymentMethod === 'dpo' || details.paymentMethod === 'flutterwave' || details.paymentMethod === 'lenco') {
       await startOnlinePayment(details.paymentMethod)
       return
     }
@@ -344,8 +377,10 @@ const CheckoutFlow = () => {
                     </label>
                   ))}
                 </div>
-                {details.paymentMethod === 'flutterwave' && !details.email.trim() && (
-                  <p className="small text-danger mt-3 mb-0">Email is required for Flutterwave. Go back to step 2 to add it.</p>
+                {(details.paymentMethod === 'flutterwave' || details.paymentMethod === 'lenco') && !details.email.trim() && (
+                  <p className="small text-danger mt-3 mb-0">
+                    Email is required for {details.paymentMethod === 'lenco' ? 'Lenco' : 'Flutterwave'}. Go back to step 2 to add it.
+                  </p>
                 )}
                 <Button type="button" className="mt-4" onClick={() => setStep(4)}>
                   Review order
@@ -389,16 +424,20 @@ const CheckoutFlow = () => {
                 </ul>
                 <Button type="button" variant="primary" onClick={placeOrder} disabled={isPlacingOrder}>
                   {isPlacingOrder
-                    ? details.paymentMethod === 'flutterwave'
-                      ? 'Redirecting to Flutterwave…'
-                      : details.paymentMethod === 'dpo'
-                        ? 'Redirecting to DPO Pay…'
-                        : 'Placing order…'
+                    ? details.paymentMethod === 'lenco'
+                      ? 'Opening Lenco…'
+                      : details.paymentMethod === 'flutterwave'
+                        ? 'Redirecting to Flutterwave…'
+                        : details.paymentMethod === 'dpo'
+                          ? 'Redirecting to DPO Pay…'
+                          : 'Placing order…'
                     : details.paymentMethod === 'dpo'
                       ? `Pay with DPO — ${formatPrice(subtotal)}`
                       : details.paymentMethod === 'flutterwave'
                         ? `Pay with Flutterwave — ${formatPrice(subtotal)}`
-                        : `Place order — ${formatPrice(subtotal)}`}
+                        : details.paymentMethod === 'lenco'
+                          ? `Pay with Lenco — ${formatPrice(subtotal)}`
+                          : `Place order — ${formatPrice(subtotal)}`}
                 </Button>
               </CardBody>
             </Card>

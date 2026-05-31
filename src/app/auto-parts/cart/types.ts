@@ -11,7 +11,7 @@ export type CartItem = {
 
 export type FulfilmentMethod = 'pickup' | 'delivery'
 
-export type PaymentMethod = 'mobile_money' | 'cash' | 'bank_transfer' | 'dpo' | 'flutterwave'
+export type PaymentMethod = 'mobile_money' | 'cash' | 'bank_transfer' | 'dpo' | 'flutterwave' | 'lenco'
 
 export type PaymentStatus = 'pending' | 'paid' | 'failed'
 
@@ -34,4 +34,5 @@ export type PlacedOrder = {
   paymentStatus?: PaymentStatus
   dpoTransToken?: string
   flutterwaveTransactionId?: string
+  lencoReference?: string
 }
