@@ -75,8 +75,8 @@ export const socialLinks = [
   },
   {
     label: 'Instagram',
-    href: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/',
-    ariaLabel: 'Follow us on Instagram',
+    href: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/satechitechenterprises/',
+    ariaLabel: 'Follow Satechi Tech Enterprises on Instagram',
   },
 ] as const
 
