@@ -1,4 +1,5 @@
-import { autoPartsContact, pageImages, sectionCopy } from '@/app/auto-parts/data'
+import { autoPartsContact, sectionCopy } from '@/app/auto-parts/data'
+import contactIllustration from '@/assets/images/element/contact.svg'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Card, Col, Container, ListGroup, ListGroupItem, Row } from 'react-bootstrap'
@@ -19,18 +20,23 @@ const ContactUs = () => {
         </Row>
 
         <Row className="g-4 g-lg-5 align-items-center mb-4 mb-lg-5">
-          <Col lg={6}>
-            <div className="position-relative rounded-3 overflow-hidden shadow-sm h-100" style={{ minHeight: 360 }}>
+          <Col lg={6} className="order-lg-1">
+            <div
+              className="d-flex align-items-center justify-content-center rounded-3 bg-light p-4 p-md-5 h-100 shadow-sm"
+              style={{ minHeight: 360 }}
+            >
               <Image
-                alt="Visit SATECHI TECH ENTERPRISES auto parts shop"
-                src={pageImages.contact}
-                fill
-                className="object-fit-cover"
-                sizes="(max-width: 992px) 100vw, 50vw"
+                alt="Contact us — get in touch by phone, WhatsApp, or email"
+                src={contactIllustration}
+                className="img-fluid"
+                width={767}
+                height={639}
+                sizes="(max-width: 992px) 80vw, 420px"
+                priority={false}
               />
             </div>
           </Col>
-          <Col lg={6}>
+          <Col lg={6} className="order-lg-2">
             <Card className="card-body shadow-sm p-4 p-md-5 h-100 overflow-hidden">
               <h5 className="mb-4">{contact.detailsTitle}</h5>
               <ListGroup variant="flush" className="border-0">
