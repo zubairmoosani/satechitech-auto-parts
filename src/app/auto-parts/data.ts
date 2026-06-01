@@ -59,6 +59,25 @@ export const autoPartsContact = {
   hours: 'Mon–Sat: 8:00 – 17:30',
 }
 
+/** Update href values with your official business social pages before DPO re-review. */
+export const socialLinks = [
+  {
+    label: 'WhatsApp',
+    href: 'https://wa.me/260961606167',
+    ariaLabel: 'Chat with us on WhatsApp',
+  },
+  {
+    label: 'Facebook',
+    href: process.env.NEXT_PUBLIC_FACEBOOK_URL ?? 'https://www.facebook.com/',
+    ariaLabel: 'Follow us on Facebook',
+  },
+  {
+    label: 'Instagram',
+    href: process.env.NEXT_PUBLIC_INSTAGRAM_URL ?? 'https://www.instagram.com/',
+    ariaLabel: 'Follow us on Instagram',
+  },
+] as const
+
 export const sectionCopy = {
   hero: {
     title: 'Auto parts you can trust',
