@@ -155,6 +155,12 @@ const CheckoutFlow = () => {
           throw new Error(data.error ?? 'Could not start Lenco payment')
         }
 
+        if (!data.widget.publicKey.startsWith('pub-')) {
+          throw new Error(
+            'Lenco payment is not configured on the live site. Add LENCO_PUBLIC_KEY and LENCO_SECRET_KEY in Vercel environment variables, then redeploy.',
+          )
+        }
+
         await openLencoWidget(data.widget, {
           onSuccess: () => {
             window.location.href = `/checkout/confirmation?order=${encodeURIComponent(orderNumber)}&reference=${encodeURIComponent(orderNumber)}`

@@ -13,11 +13,21 @@ export const lencoConfig = {
       : 'https://pay.sandbox.lenco.co/js/v1/inline.js'),
 }
 
+const isPlaceholderKey = (value: string) =>
+  !value ||
+  value.includes('your-lenco') ||
+  value === 'your-lenco-public-key' ||
+  value === 'your-lenco-secret-key'
+
 export const assertLencoConfigured = () => {
-  if (!lencoConfig.secretKey) {
-    throw new Error('LENCO_SECRET_KEY is not configured.')
+  if (isPlaceholderKey(lencoConfig.secretKey)) {
+    throw new Error(
+      'LENCO_SECRET_KEY is missing on the server. Add your Lenco sandbox secret key in Vercel → Settings → Environment Variables, then redeploy.',
+    )
   }
-  if (!lencoConfig.publicKey) {
-    throw new Error('LENCO_PUBLIC_KEY is not configured.')
+  if (isPlaceholderKey(lencoConfig.publicKey) || !lencoConfig.publicKey.startsWith('pub-')) {
+    throw new Error(
+      'LENCO_PUBLIC_KEY is missing or invalid on the server. Add your Lenco public key (starts with pub-) in Vercel → Environment Variables, then redeploy.',
+    )
   }
 }

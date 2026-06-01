@@ -78,6 +78,12 @@ export const openLencoWidget = async (
     throw new Error('Lenco payment widget is unavailable.')
   }
 
+  if (!config.publicKey.startsWith('pub-')) {
+    throw new Error(
+      'Lenco is not configured on this server. The payment public key is missing — add LENCO_PUBLIC_KEY in Vercel and redeploy.',
+    )
+  }
+
   window.LencoPay.getPaid({
     key: config.publicKey,
     reference: config.reference,
