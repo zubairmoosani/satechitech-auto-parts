@@ -68,8 +68,10 @@ export const socialLinks = [
   },
   {
     label: 'Facebook',
-    href: process.env.NEXT_PUBLIC_FACEBOOK_URL ?? 'https://www.facebook.com/',
-    ariaLabel: 'Follow us on Facebook',
+    href:
+      process.env.NEXT_PUBLIC_FACEBOOK_URL ??
+      'https://www.facebook.com/profile.php?id=61590653036815',
+    ariaLabel: 'Follow Satechi Tech Enterprises on Facebook',
   },
   {
     label: 'Instagram',
