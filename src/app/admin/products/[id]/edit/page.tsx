@@ -3,6 +3,8 @@ import { getProductById } from '@/lib/db/repositories/products'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 export const metadata: Metadata = {
   title: 'Edit Product | SATECHI TECH Admin',
 }
