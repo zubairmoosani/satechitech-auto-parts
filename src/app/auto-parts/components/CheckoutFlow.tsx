@@ -106,6 +106,8 @@ const CheckoutFlow = () => {
   }
 
   const startOnlinePayment = async (paymentMethod: 'dpo' | 'flutterwave' | 'lenco') => {
+    if (isPlacingOrder) return
+
     if ((paymentMethod === 'flutterwave' || paymentMethod === 'lenco') && !details.email.trim()) {
       showNotification({
         type: 'error',
@@ -115,7 +117,7 @@ const CheckoutFlow = () => {
       return
     }
 
-    const orderNumber = `ST-${Date.now().toString().slice(-8)}`
+    const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const placedAt = new Date().toISOString()
     const orderPayload = {
       orderNumber,
@@ -192,7 +194,7 @@ const CheckoutFlow = () => {
   }
 
   const placeOrder = async () => {
-    const orderNumber = `ST-${Date.now().toString().slice(-8)}`
+    const orderNumber = `ST-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
     const placedAt = new Date().toISOString()
     const orderPayload = {
       orderNumber,

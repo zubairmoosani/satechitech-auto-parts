@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { randomUUID } from 'crypto'
 import {
   assertFlutterwaveConfigured,
   flutterwaveConfig,
@@ -117,7 +118,7 @@ const createV4CheckoutSession = async (
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json',
       'X-Trace-Id': `satechitech-${Date.now()}`,
-      'X-Idempotency-Key': input.txRef,
+      'X-Idempotency-Key': randomUUID(),
     },
     body: JSON.stringify({
       amount: input.amount,
