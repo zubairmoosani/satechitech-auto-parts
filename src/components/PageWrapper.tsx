@@ -1,4 +1,5 @@
 'use client'
+import AuthSessionProvider from '@/components/AuthSessionProvider'
 import { AuthProvider, CartProvider, NotificationProvider } from '@/states'
 import dynamic from 'next/dynamic'
 
@@ -10,9 +11,11 @@ const PageWrapper = ({ children }: { children: React.ReactNode }) => {
     <>
       <NotificationProvider>
         <LayoutProvider>
-          <AuthProvider>
-            <CartProvider>{children}</CartProvider>
-          </AuthProvider>
+          <AuthSessionProvider>
+            <AuthProvider>
+              <CartProvider>{children}</CartProvider>
+            </AuthProvider>
+          </AuthSessionProvider>
         </LayoutProvider>
       </NotificationProvider>
     </>

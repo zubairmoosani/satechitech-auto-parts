@@ -217,7 +217,7 @@ export type ProductType = {
   price: number
   salePrice?: number
   rating: number
-  image: StaticImageData
+  image: StaticImageData | string
   badge?: string
   stockLabel?: string
 }

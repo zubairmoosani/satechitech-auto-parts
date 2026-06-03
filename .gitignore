@@ -18,6 +18,12 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# local data fallback (when MongoDB is not configured)
+.data/
+
+# uploaded product images (local fallback)
+public/uploads/
+
 # misc
 .DS_Store
 *.pem

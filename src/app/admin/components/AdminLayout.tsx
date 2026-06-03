@@ -1,64 +1,81 @@
 'use client'
-import LogoBox from '@/components/LogoBox'
+
+import AdminCompanyLogo from '@/app/admin/components/AdminCompanyLogo'
+import AdminMenu from '@/app/admin/components/AdminMenu'
 import Preloader from '@/components/Preloader'
 import { useToggle } from '@/hooks'
-import { useAuthContext } from '@/states'
 import dynamic from 'next/dynamic'
-import Link from 'next/link'
-import { OverlayScrollbarsComponent } from 'overlayscrollbars-react'
-import 'overlayscrollbars/overlayscrollbars.css'
-import { Suspense, type ReactNode } from 'react'
+import { signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
+import { Suspense, useEffect, type ReactNode } from 'react'
 import { Offcanvas, OffcanvasBody } from 'react-bootstrap'
-import { BsGearFill } from 'react-icons/bs'
 import { FaArrowRightFromBracket } from 'react-icons/fa6'
-const AdminMenu = dynamic(() => import('./AdminMenu'))
+import './admin-panel.scss'
+
 const TopBar = dynamic(() => import('./TopBar'))
 
-const AdminLeftMenu = () => {
-  const { removeSession } = useAuthContext()
+const AdminLogoutButton = () => {
+  const handleLogout = async () => {
+    await signOut({ callbackUrl: '/auth/sign-in' })
+  }
 
   return (
-    <>
-      <Suspense>
-        <AdminMenu />
-      </Suspense>
-
-      <div className="d-flex align-items-center justify-content-between text-primary-hover mt-auto p-3">
-        <Link onClick={removeSession} className="h6 fw-light mb-0 text-body d-flex align-items-center" href="">
-          <FaArrowRightFromBracket className="me-1" />
-          Log out
-        </Link>
-        <Link className="h6 mb-0 text-body" href="/admin/settings">
-          <BsGearFill />
-        </Link>
-      </div>
-    </>
+    <button
+      type="button"
+      onClick={handleLogout}
+      className="h6 fw-light mb-0 text-body d-flex align-items-center btn btn-link p-0 text-decoration-none"
+    >
+      <FaArrowRightFromBracket className="me-1" />
+      Log out
+    </button>
   )
 }
 
 const AdminLayout = ({ children }: Readonly<{ children: ReactNode }>) => {
-  const { isOpen, toggle } = useToggle()
+  const pathname = usePathname()
+  const { isOpen, toggle, hide } = useToggle()
+
+  useEffect(() => {
+    hide()
+  }, [pathname, hide])
 
   return (
-    <main>
-      <nav className="navbar sidebar navbar-expand-xl navbar-light">
-        <div className="d-flex align-items-center">
-          <LogoBox />
+    <main className="admin-panel-root">
+      <nav className="navbar sidebar navbar-expand-xl navbar-light admin-sidebar-shell">
+        <div className="d-none d-xl-flex admin-sidebar-logo">
+          <AdminCompanyLogo />
         </div>
-        <div className="flex-row custom-scrollbar h-100" tabIndex={-1}>
-          <div className="sidebar-content d-flex flex-column pt-4">
-            <AdminLeftMenu />
+
+        <div className="admin-sidebar-body d-none d-xl-flex">
+          <div className="sidebar-content admin-sidebar-content">
+            <div className="admin-sidebar-nav">
+              <Suspense>
+                <AdminMenu />
+              </Suspense>
+            </div>
+            <div className="admin-sidebar-logout">
+              <AdminLogoutButton />
+            </div>
           </div>
         </div>
 
-        <Offcanvas show={isOpen} onHide={toggle} placement="start" className="flex-row custom-scrollbar h-100" tabIndex={-1}>
-          <OverlayScrollbarsComponent className="w-100">
-            <OffcanvasBody className="sidebar-offcanvas-wrapper d-flex flex-column pt-4">
-              <AdminLeftMenu />
-            </OffcanvasBody>
-          </OverlayScrollbarsComponent>
+        <Offcanvas show={isOpen} onHide={hide} placement="start" className="admin-offcanvas d-xl-none">
+          <OffcanvasBody className="admin-offcanvas-body">
+            <div className="admin-offcanvas-logo">
+              <AdminCompanyLogo />
+            </div>
+            <div className="admin-offcanvas-nav">
+              <Suspense>
+                <AdminMenu onItemClick={hide} />
+              </Suspense>
+            </div>
+            <div className="admin-offcanvas-logout">
+              <AdminLogoutButton />
+            </div>
+          </OffcanvasBody>
         </Offcanvas>
       </nav>
+
       <div className="page-content">
         <Suspense>
           <TopBar toggle={toggle} />

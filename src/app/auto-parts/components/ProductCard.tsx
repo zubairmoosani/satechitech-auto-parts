@@ -28,6 +28,7 @@ const ProductCard = ({ product }: { product: ProductType }) => {
           fill
           sizes="(max-width: 576px) 50vw, (max-width: 992px) 33vw, 25vw"
           className="object-fit-cover"
+          unoptimized={typeof product.image === 'string'}
         />
         {/* <div className="card-img-overlay d-flex flex-column p-3 z-index-1">
           <div className="d-flex flex-wrap gap-1">

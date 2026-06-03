@@ -23,8 +23,8 @@ const useSignIn = () => {
   const { control, handleSubmit } = useForm({
     resolver: yupResolver(loginFormSchema),
     defaultValues: {
-      email: 'user@demo.com',
-      password: '123456',
+      email: 'admin@satechitech.com',
+      password: 'Admin@123456',
     },
   })
 
@@ -38,16 +38,16 @@ const useSignIn = () => {
       password: values?.password,
     }).then((res) => {
       if (res?.ok) {
-        push(queryParams['redirectTo'] ?? '/')
+        push(queryParams['redirectTo'] ?? '/admin/products/add')
         showNotification({
-          message: 'Successfully logged in. Redirecting....',
+          message: 'Successfully logged in. Redirecting to add product...',
           type: 'success',
         })
       } else {
-        showNotification({ message: res?.error ?? '', type: 'error' })
+        showNotification({ message: res?.error ?? 'Invalid email or password.', type: 'error' })
       }
+      setLoading(false)
     })
-    setLoading(false)
   })
 
   return { loading, login, control }
