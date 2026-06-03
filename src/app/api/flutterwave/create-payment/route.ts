@@ -1,6 +1,11 @@
 import type { CartItem, CheckoutDetails } from '@/app/auto-parts/cart/types'
 import { companyInfo } from '@/app/auto-parts/data'
-import { assertFlutterwaveConfigured, createFlutterwavePayment, FlutterwaveApiError } from '@/lib/flutterwave'
+import {
+  assertFlutterwaveConfigured,
+  createFlutterwavePayment,
+  FlutterwaveApiError,
+  getFlutterwaveConfigHint,
+} from '@/lib/flutterwave'
 import { assertPaymentPublicBaseUrl, getPaymentPublicBaseUrl } from '@/lib/payments/siteUrl'
 import { NextResponse } from 'next/server'
 
@@ -57,11 +62,25 @@ export async function POST(request: Request) {
     console.error('Flutterwave create-payment error:', error)
 
     if (error instanceof FlutterwaveApiError) {
-      return NextResponse.json({ error: error.message }, { status: 502 })
+      const hint = getFlutterwaveConfigHint()
+      const isAuthError = /invalid authorization/i.test(error.message)
+
+      return NextResponse.json(
+        {
+          error: error.message,
+          ...(isAuthError && hint ? { hint } : {}),
+        },
+        { status: 502 },
+      )
     }
 
+    const hint = getFlutterwaveConfigHint()
+
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Payment initialization failed' },
+      {
+        error: error instanceof Error ? error.message : 'Payment initialization failed',
+        ...(hint ? { hint } : {}),
+      },
       { status: 500 },
     )
   }

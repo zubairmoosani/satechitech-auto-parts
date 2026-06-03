@@ -1,5 +1,9 @@
 import { companyInfo } from '@/app/auto-parts/data'
-import { verifyFlutterwaveTransaction } from '@/lib/flutterwave'
+import {
+  getFlutterwaveAuthMode,
+  verifyFlutterwaveOrderReference,
+  verifyFlutterwaveTransaction,
+} from '@/lib/flutterwave'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
@@ -11,6 +15,27 @@ export async function GET(request: Request) {
   const status = params.get('status')?.toLowerCase()
 
   if (!transactionId) {
+    if (txRef && getFlutterwaveAuthMode() === 'v4-oauth') {
+      try {
+        const verified = await verifyFlutterwaveOrderReference(txRef)
+        return NextResponse.json({
+          paid:
+            verified.paid &&
+            (verified.currency === undefined || verified.currency === companyInfo.currency),
+          txRef,
+          status: verified.status ?? status,
+          amount: verified.amount,
+          currency: verified.currency,
+        })
+      } catch {
+        return NextResponse.json({
+          paid: status === 'successful' || status === 'completed',
+          txRef,
+          status,
+        })
+      }
+    }
+
     return NextResponse.json({
       paid: status === 'successful' || status === 'completed',
       txRef,
