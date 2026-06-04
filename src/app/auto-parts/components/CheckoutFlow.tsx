@@ -21,11 +21,11 @@ const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] 
     label: 'Pay with Flutterwave',
     detail: 'Pay with card, mobile money, or bank via Flutterwave (ZMW). Email required.',
   },
-  {
-    value: 'lenco',
-    label: 'Pay with Lenco',
-    detail: 'Pay with card or mobile money (Airtel, MTN, Zamtel) via Lenco (ZMW). Email required.',
-  },
+  // {
+  //   value: 'lenco',
+  //   label: 'Pay with Lenco',
+  //   detail: 'Pay with card or mobile money (Airtel, MTN, Zamtel) via Lenco (ZMW). Email required.',
+  // },
 ]
 
 const defaultDetails: CheckoutDetails = {
