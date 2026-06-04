@@ -38,9 +38,9 @@ const useSignIn = () => {
       password: values?.password,
     }).then((res) => {
       if (res?.ok) {
-        push(queryParams['redirectTo'] ?? '/admin/products/add')
+        push(queryParams['redirectTo'] ?? '/admin/products')
         showNotification({
-          message: 'Successfully logged in. Redirecting to add product...',
+          message: 'Successfully logged in. Redirecting to products...',
           type: 'success',
         })
       } else {
