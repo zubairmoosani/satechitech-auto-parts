@@ -8,13 +8,15 @@ import { FaFacebookF, FaInstagram, FaWhatsapp } from 'react-icons/fa6'
 
 const footerNav = [
   { label: 'Home', href: '/' },
-  { label: 'Products', href: '/#products' },
+  { label: 'Products', href: '/products' },
   { label: 'Cart', href: '/cart' },
-  { label: 'About', href: '/#about-us' },
+  { label: 'About Us', href: '/about' },
   { label: 'Contact', href: '/#contact-us' },
 ]
 
 const legalNav = [
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms & Conditions', href: '/terms' },
   { label: 'Refund Policy', href: '/refund-policy' },
   { label: 'Cancellation Policy', href: '/cancellation-policy' },
 ]

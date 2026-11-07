@@ -10,8 +10,8 @@ import { Collapse, Container, Nav, Navbar, NavbarBrand } from 'react-bootstrap'
 
 const navItems = [
   { label: 'Home', href: '/' },
-  { label: 'Products', href: '/#products' },
-  { label: 'About', href: '/#about-us' },
+  { label: 'Products', href: '/products' },
+  { label: 'About', href: '/about' },
   { label: 'Contact', href: '/#contact-us' },
 ]
 
