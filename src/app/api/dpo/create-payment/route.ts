@@ -19,7 +19,7 @@ export async function POST(request: Request) {
 
     assertDpoPublicBaseUrl()
 
-    const order = await createPendingOrder(body, 'dpo')
+    const order = await createPendingOrder(body, 'dpo', { requireEmail: true })
     const { firstName, lastName } = splitCustomerName(order.details.fullName)
     const { redirectUrl, backUrl } = getDpoCallbackUrls(order.orderNumber)
     const serviceDescription = order.items.map((item) => `${item.name} x${item.quantity}`).join(', ').slice(0, 200)
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
       backUrl,
       customerFirstName: firstName,
       customerLastName: lastName,
-      customerEmail: order.details.email || 'customer@satechitech.com',
+      customerEmail: order.details.email,
       serviceDescription: serviceDescription || 'SATECHI TECH auto parts order',
     })
 

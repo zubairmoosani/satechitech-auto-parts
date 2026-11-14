@@ -19,12 +19,12 @@ const paymentOptions: { value: PaymentMethod; label: string; detail: string }[] 
   {
     value: 'flutterwave',
     label: 'Pay with Flutterwave',
-    detail: 'Pay with card, mobile money, or bank via Flutterwave (ZMW). Email required.',
+    detail: 'Pay with card, mobile money, or bank via Flutterwave (ZMW).',
   },
   {
     value: 'lenco',
     label: 'Pay with Lenco',
-    detail: 'Pay with card or mobile money (Airtel, MTN, Zamtel) via Lenco (ZMW). Email required.',
+    detail: 'Pay with card or mobile money (Airtel, MTN, Zamtel) via Lenco (ZMW).',
   },
 ]
 
@@ -79,6 +79,7 @@ const CheckoutFlow = () => {
   const phoneDigits = details.phone.replace(/\D/g, '')
   const isNameValid = details.fullName.trim().length >= 2
   const isPhoneValid = phoneDigits.length >= 9
+  const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(details.email.trim())
   const isAddressValid = details.fulfilment === 'pickup' || details.address.trim().length >= 5
 
   const handleContinueToPayment = () => {
@@ -91,6 +92,14 @@ const CheckoutFlow = () => {
         type: 'error',
         title: 'Phone required',
         message: 'Please enter a valid phone number (at least 9 digits).',
+      })
+      return
+    }
+    if (!isEmailValid) {
+      showNotification({
+        type: 'error',
+        title: 'Email required',
+        message: 'Please enter a valid email address.',
       })
       return
     }
@@ -296,13 +305,17 @@ const CheckoutFlow = () => {
                     )}
                   </Col>
                   <Col md={12}>
-                    <Form.Label>Email</Form.Label>
+                    <Form.Label>Email *</Form.Label>
                     <Form.Control
                       type="email"
                       value={details.email}
                       onChange={(e) => updateDetails('email', e.target.value)}
                       placeholder="you@example.com"
+                      isInvalid={details.email.length > 0 && !isEmailValid}
                     />
+                    {details.email.length > 0 && !isEmailValid && (
+                      <Form.Text className="text-danger">Enter a valid email address</Form.Text>
+                    )}
                   </Col>
                   <Col md={12}>
                     <Form.Label>Fulfilment *</Form.Label>
@@ -385,11 +398,6 @@ const CheckoutFlow = () => {
                     </label>
                   ))}
                 </div>
-                {(details.paymentMethod === 'flutterwave' || details.paymentMethod === 'lenco') && !details.email.trim() && (
-                  <p className="small text-danger mt-3 mb-0">
-                    Email is required for {details.paymentMethod === 'lenco' ? 'Lenco' : 'Flutterwave'}. Go back to step 2 to add it.
-                  </p>
-                )}
                 <Button type="button" className="mt-4" onClick={() => setStep(4)}>
                   Review order
                 </Button>
