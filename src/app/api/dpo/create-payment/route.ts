@@ -1,4 +1,3 @@
-import type { CartItem, CheckoutDetails } from '@/app/auto-parts/cart/types'
 import { companyInfo } from '@/app/auto-parts/data'
 import {
   assertDpoPublicBaseUrl,
@@ -8,46 +7,37 @@ import {
   getDpoPaymentUrl,
   splitCustomerName,
 } from '@/lib/dpo'
-import { savePendingDpoOrder } from '@/lib/dpo/pendingOrders'
+import { updateOrder } from '@/lib/db/repositories/orders'
+import { createPendingOrder, OrderValidationError, type CreateOrderRequestBody } from '@/lib/orders/checkout'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
-type CreatePaymentBody = {
-  orderNumber: string
-  subtotal: number
-  items: CartItem[]
-  details: CheckoutDetails
-  placedAt: string
-}
-
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as CreatePaymentBody
-
-    if (!body.orderNumber || !body.subtotal || !body.items?.length || !body.details) {
-      return NextResponse.json({ error: 'Invalid order payload' }, { status: 400 })
-    }
+    const body = (await request.json()) as CreateOrderRequestBody
 
     assertDpoPublicBaseUrl()
 
-    const { firstName, lastName } = splitCustomerName(body.details.fullName)
-    const { redirectUrl, backUrl } = getDpoCallbackUrls(body.orderNumber)
-    const serviceDescription = body.items.map((item) => `${item.name} x${item.quantity}`).join(', ').slice(0, 200)
+    const order = await createPendingOrder(body, 'dpo')
+    const { firstName, lastName } = splitCustomerName(order.details.fullName)
+    const { redirectUrl, backUrl } = getDpoCallbackUrls(order.orderNumber)
+    const serviceDescription = order.items.map((item) => `${item.name} x${item.quantity}`).join(', ').slice(0, 200)
 
     const tokenResult = await createDpoToken({
-      amount: body.subtotal,
+      amount: order.subtotal,
       currency: companyInfo.currency,
-      companyRef: body.orderNumber,
+      companyRef: order.orderNumber,
       redirectUrl,
       backUrl,
       customerFirstName: firstName,
       customerLastName: lastName,
-      customerEmail: body.details.email || 'customer@satechitech.com',
+      customerEmail: order.details.email || 'customer@satechitech.com',
       serviceDescription: serviceDescription || 'SATECHI TECH auto parts order',
     })
 
     if (!tokenResult.success || !tokenResult.transToken) {
+      await updateOrder(order.orderNumber, { paymentStatus: 'failed' })
       return NextResponse.json(
         {
           error: tokenResult.resultExplanation ?? 'Failed to create DPO payment token',
@@ -57,28 +47,19 @@ export async function POST(request: Request) {
       )
     }
 
-    savePendingDpoOrder({
-      order: {
-        orderNumber: body.orderNumber,
-        items: body.items,
-        subtotal: body.subtotal,
-        details: { ...body.details, paymentMethod: 'dpo' },
-        placedAt: body.placedAt,
-        paymentStatus: 'pending',
-        dpoTransToken: tokenResult.transToken,
-      },
-      transToken: tokenResult.transToken,
-      transRef: tokenResult.transRef,
-      paymentStatus: 'pending',
-    })
+    await updateOrder(order.orderNumber, { dpoTransToken: tokenResult.transToken })
 
     return NextResponse.json({
       paymentUrl: getDpoPaymentUrl(tokenResult.transToken),
-      orderNumber: body.orderNumber,
-      transToken: tokenResult.transToken,
+      orderNumber: order.orderNumber,
+      subtotal: order.subtotal,
     })
   } catch (error) {
     console.error('DPO create-payment error:', error)
+
+    if (error instanceof OrderValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
 
     if (error instanceof DpoApiError) {
       return NextResponse.json(

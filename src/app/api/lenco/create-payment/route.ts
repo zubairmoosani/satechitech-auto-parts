@@ -1,55 +1,52 @@
-import type { CartItem, CheckoutDetails } from '@/app/auto-parts/cart/types'
 import { companyInfo } from '@/app/auto-parts/data'
 import { splitCustomerName } from '@/lib/dpo'
 import { assertLencoConfigured, lencoConfig, LencoApiError } from '@/lib/lenco'
+import { updateOrder } from '@/lib/db/repositories/orders'
+import { createPendingOrder, OrderValidationError, type CreateOrderRequestBody } from '@/lib/orders/checkout'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
-type CreatePaymentBody = {
-  orderNumber: string
-  subtotal: number
-  items: CartItem[]
-  details: CheckoutDetails
-  placedAt: string
-}
-
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as CreatePaymentBody
+    const body = (await request.json()) as CreateOrderRequestBody
 
-    if (!body.orderNumber || !body.subtotal || !body.items?.length || !body.details) {
-      return NextResponse.json({ error: 'Invalid order payload' }, { status: 400 })
-    }
-
-    if (!body.details.email?.trim()) {
+    if (!body?.details?.email?.trim()) {
       return NextResponse.json({ error: 'Email is required for Lenco payments.' }, { status: 400 })
     }
 
     assertLencoConfigured()
 
-    const { firstName, lastName } = splitCustomerName(body.details.fullName)
+    const order = await createPendingOrder(body, 'lenco', { requireEmail: true })
+    await updateOrder(order.orderNumber, { lencoReference: order.orderNumber })
+
+    const { firstName, lastName } = splitCustomerName(order.details.fullName)
 
     return NextResponse.json({
-      orderNumber: body.orderNumber,
+      orderNumber: order.orderNumber,
+      subtotal: order.subtotal,
       widget: {
         scriptUrl: lencoConfig.widgetScriptUrl,
         publicKey: lencoConfig.publicKey,
-        reference: body.orderNumber,
-        email: body.details.email.trim(),
-        amount: body.subtotal,
+        reference: order.orderNumber,
+        email: order.details.email,
+        amount: order.subtotal,
         currency: companyInfo.currency,
         label: 'SATECHI TECH ENTERPRISES',
         channels: ['card', 'mobile-money'],
         customer: {
           firstName,
           lastName,
-          phone: body.details.phone,
+          phone: order.details.phone,
         },
       },
     })
   } catch (error) {
     console.error('Lenco create-payment error:', error)
+
+    if (error instanceof OrderValidationError) {
+      return NextResponse.json({ error: error.message }, { status: 400 })
+    }
 
     if (error instanceof LencoApiError) {
       return NextResponse.json({ error: error.message }, { status: 502 })

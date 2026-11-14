@@ -1,6 +1,7 @@
 'use client'
 
 import type { CartItem, PlacedOrder } from '@/app/auto-parts/cart/types'
+import { toCartId } from '@/app/auto-parts/cart/cartId'
 import type { ProductType } from '@/app/auto-parts/data'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
@@ -23,12 +24,6 @@ type CartContextType = {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
-
-const toCartId = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)/g, '')
 
 const productToCartItem = (product: ProductType, quantity: number): CartItem => ({
   id: toCartId(product.name),

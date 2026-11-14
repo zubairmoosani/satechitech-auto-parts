@@ -34,9 +34,9 @@ export const companyInfo = {
   logoAlt: 'SATECHI TECH ENTERPRISES logo',
   currency: 'ZMW',
   tagline:
-    'Your local auto parts supplier in Katima Mulilo — brakes, filters, oils, batteries, and accessories for cars, bakkies, and light commercial vehicles.',
+    'Your local auto parts supplier in Mansa — brakes, filters, oils, batteries, and accessories for cars, pickups, and light commercial vehicles.',
   metaDescription:
-    'SATECHI TECH ENTERPRISES supplies quality auto parts in Katima Mulilo, Namibia. Visit us or enquire on WhatsApp for brakes, filters, oils, batteries, and more.',
+    'SATECHI TECH ENTERPRISES supplies quality auto parts in Mansa, Zambia. Visit us or enquire on WhatsApp for brakes, filters, oils, batteries, and more.',
 }
 
 /** Client pricing rule: ZMW price = original N$ price + 75 (e.g. N$75 → ZMW 150). */
@@ -83,7 +83,7 @@ export const socialLinks = [
 export const sectionCopy = {
   hero: {
     title: 'Auto parts you can trust',
-    titleHighlight: 'in Katima Mulilo',
+    titleHighlight: 'in Mansa',
     description:
       'SATECHI TECH ENTERPRISES keeps everyday service parts in stock — from brake pads and oil filters to batteries and lighting. Walk in, call, or message us on WhatsApp for a quick quote.',
     cta: 'View products',
@@ -115,7 +115,7 @@ export const sectionCopy = {
   },
   about: {
     title: 'About us',
-    lead: `${companyInfo.legalName} is a Katima Mulilo–based auto parts business serving private motorists, taxi operators, mechanics, and small fleets across the Zambezi region.`,
+    lead: `${companyInfo.legalName} is a Mansa-based auto parts business serving private motorists, taxi operators, mechanics, and small fleets across Luapula Province.`,
     body: 'We focus on fast-moving service items and common repair parts — not fancy promises, just the right component at a fair price. Tell us your vehicle make, model, and year, and we will help you find what fits.',
     extra:
       'Whether you are doing a full service, replacing worn brakes, or fixing lights and mirrors before a long trip, our team is here to help you get back on the road safely.',
@@ -124,7 +124,7 @@ export const sectionCopy = {
     title: 'Contact us',
     subtitle: 'Visit our shop, call, or WhatsApp for stock checks and quotations.',
     detailsTitle: 'Contact details',
-    mapTitle: 'Find us in Katima Mulilo',
+    mapTitle: 'Find us in Mansa',
   },
 }
 
@@ -155,7 +155,7 @@ export const heroPromosData: HeroPromoType[] = [
     image: promoBrakes,
     badge: 'Service special',
     title: 'Brake pad & disc combos',
-    detail: 'Matched front sets for common sedans and bakkies — ask for today’s price.',
+    detail: 'Matched front sets for common sedans and pickups — ask for today’s price.',
   },
   {
     image: promoOil,
@@ -325,7 +325,7 @@ export const partCategoriesBrowseData: PartCategoryBrowseType[] = [
   },
   {
     title: 'Batteries',
-    description: 'Car and bakkie batteries plus terminals and accessories.',
+    description: 'Car and pickup batteries plus terminals and accessories.',
     icon: FaBatteryFull,
     variant: 'bg-success text-success',
   },
@@ -359,7 +359,7 @@ export type FeatureType = {
 export const autoPartsFeatures: FeatureType[] = [
   {
     title: 'Local stock',
-    description: 'Common service and repair parts available from our Katima Mulilo shop.',
+    description: 'Common service and repair parts available from our Mansa shop.',
     variant: 'bg-primary text-primary',
     icon: FaStar,
   },
@@ -377,7 +377,7 @@ export const autoPartsFeatures: FeatureType[] = [
   },
   {
     title: 'Regional supply',
-    description: 'Serving Katima Mulilo and surrounding areas — ask about delivery options.',
+    description: 'Serving Mansa and surrounding areas — ask about delivery options.',
     variant: 'bg-orange text-orange',
     icon: BsTruck,
   },

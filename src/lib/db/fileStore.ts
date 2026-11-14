@@ -1,4 +1,5 @@
 import type { AdminProduct, CreateProductInput, UpdateProductInput } from '@/types/admin-product'
+import type { NewOrderInput, OrderUpdateInput, StoredOrder } from '@/types/order'
 import { randomUUID } from 'crypto'
 import { mkdir, readFile, writeFile } from 'fs/promises'
 import path from 'path'
@@ -15,12 +16,13 @@ export type StoredUser = {
 type StoreFile = {
   users: StoredUser[]
   products: AdminProduct[]
+  orders: StoredOrder[]
 }
 
 const STORE_DIR = path.join(process.cwd(), '.data')
 const STORE_PATH = path.join(STORE_DIR, 'store.json')
 
-const emptyStore = (): StoreFile => ({ users: [], products: [] })
+const emptyStore = (): StoreFile => ({ users: [], products: [], orders: [] })
 
 type LegacyProduct = AdminProduct & { productId?: string }
 
@@ -32,10 +34,11 @@ const normalizeProduct = (product: LegacyProduct): AdminProduct => ({
 async function readStore(): Promise<StoreFile> {
   try {
     const raw = await readFile(STORE_PATH, 'utf8')
-    const parsed = JSON.parse(raw) as { users?: StoredUser[]; products?: LegacyProduct[] }
+    const parsed = JSON.parse(raw) as { users?: StoredUser[]; products?: LegacyProduct[]; orders?: StoredOrder[] }
     return {
       users: Array.isArray(parsed.users) ? parsed.users : [],
       products: Array.isArray(parsed.products) ? parsed.products.map(normalizeProduct) : [],
+      orders: Array.isArray(parsed.orders) ? parsed.orders : [],
     }
   } catch {
     return emptyStore()
@@ -125,4 +128,36 @@ export async function fileDeleteProduct(id: string): Promise<boolean> {
   if (store.products.length === before) return false
   await writeStore(store)
   return true
+}
+
+export async function fileListOrders(): Promise<StoredOrder[]> {
+  const store = await readStore()
+  return [...store.orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+}
+
+export async function fileFindOrder(orderNumber: string): Promise<StoredOrder | null> {
+  const store = await readStore()
+  return store.orders.find((order) => order.orderNumber === orderNumber) ?? null
+}
+
+export async function fileCreateOrder(input: NewOrderInput): Promise<StoredOrder> {
+  const store = await readStore()
+  if (store.orders.some((order) => order.orderNumber === input.orderNumber)) {
+    throw new Error('Order already exists.')
+  }
+  const now = new Date().toISOString()
+  const record: StoredOrder = { ...input, createdAt: now, updatedAt: now }
+  store.orders.push(record)
+  await writeStore(store)
+  return record
+}
+
+export async function fileUpdateOrder(orderNumber: string, patch: OrderUpdateInput): Promise<StoredOrder | null> {
+  const store = await readStore()
+  const index = store.orders.findIndex((order) => order.orderNumber === orderNumber)
+  if (index === -1) return null
+  const updated: StoredOrder = { ...store.orders[index], ...patch, updatedAt: new Date().toISOString() }
+  store.orders[index] = updated
+  await writeStore(store)
+  return updated
 }

@@ -1,68 +1,62 @@
-import { companyInfo } from '@/app/auto-parts/data'
-import {
-  getFlutterwaveAuthMode,
-  verifyFlutterwaveOrderReference,
-  verifyFlutterwaveTransaction,
-} from '@/lib/flutterwave'
+import { getFlutterwaveAuthMode, verifyFlutterwaveOrderReference, verifyFlutterwaveTransaction } from '@/lib/flutterwave'
+import { getOrder, markOrderPaid } from '@/lib/db/repositories/orders'
+import { paymentCoversOrder } from '@/lib/orders/checkout'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
+/**
+ * Confirms a Flutterwave payment with Flutterwave's API. The `status` query param from the
+ * browser redirect is never trusted; amount, currency and reference must match the stored order.
+ */
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams
-  const transactionId = params.get('transaction_id') ?? params.get('transactionId')
-  const txRef = params.get('tx_ref') ?? params.get('order')
-  const status = params.get('status')?.toLowerCase()
+  const orderNumber = (params.get('order') ?? params.get('tx_ref'))?.trim()
+  const transactionId = (params.get('transaction_id') ?? params.get('transactionId'))?.trim()
 
-  if (!transactionId) {
-    if (txRef && getFlutterwaveAuthMode() === 'v4-oauth') {
-      try {
-        const verified = await verifyFlutterwaveOrderReference(txRef)
-        return NextResponse.json({
-          paid:
-            verified.paid &&
-            (verified.currency === undefined || verified.currency === companyInfo.currency),
-          txRef,
-          status: verified.status ?? status,
-          amount: verified.amount,
-          currency: verified.currency,
-        })
-      } catch {
-        return NextResponse.json({
-          paid: status === 'successful' || status === 'completed',
-          txRef,
-          status,
-        })
-      }
-    }
-
-    return NextResponse.json({
-      paid: status === 'successful' || status === 'completed',
-      txRef,
-      status,
-    })
+  if (!orderNumber) {
+    return NextResponse.json({ paid: false, error: 'Order number required' }, { status: 400 })
   }
 
   try {
-    const verified = await verifyFlutterwaveTransaction(transactionId)
+    const order = await getOrder(orderNumber)
+    if (!order || order.paymentMethod !== 'flutterwave') {
+      return NextResponse.json({ paid: false, orderNumber, error: 'Order not found' }, { status: 404 })
+    }
+
+    if (order.paymentStatus === 'paid') {
+      return NextResponse.json({ paid: true, orderNumber })
+    }
+
+    let verified
+    if (getFlutterwaveAuthMode() === 'v4-oauth') {
+      verified = await verifyFlutterwaveOrderReference(orderNumber)
+    } else if (transactionId && /^\d+$/.test(transactionId)) {
+      verified = await verifyFlutterwaveTransaction(transactionId)
+    } else {
+      return NextResponse.json({ paid: false, orderNumber, status: 'pending' })
+    }
+
+    const paid =
+      verified.paid &&
+      verified.txRef === orderNumber &&
+      paymentCoversOrder(order, verified.amount, verified.currency)
+
+    if (paid) {
+      await markOrderPaid(orderNumber, transactionId ? { flutterwaveTransactionId: transactionId } : {})
+    }
 
     return NextResponse.json({
-      paid:
-        verified.paid &&
-        (verified.currency === undefined || verified.currency === companyInfo.currency),
-      txRef: txRef ?? verified.message,
+      paid,
+      orderNumber,
       status: verified.status,
       amount: verified.amount,
       currency: verified.currency,
     })
   } catch (error) {
     return NextResponse.json(
-      {
-        paid: status === 'successful',
-        txRef,
-        error: error instanceof Error ? error.message : 'Verification failed',
-      },
-      { status: 500 },
+      { paid: false, orderNumber, error: error instanceof Error ? error.message : 'Verification failed' },
+      { status: 502 },
     )
   }
 }

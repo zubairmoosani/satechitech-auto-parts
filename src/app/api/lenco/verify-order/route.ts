@@ -1,42 +1,50 @@
-import { companyInfo } from '@/app/auto-parts/data'
 import { verifyLencoCollection } from '@/lib/lenco'
+import { getOrder, markOrderPaid } from '@/lib/db/repositories/orders'
+import { paymentCoversOrder } from '@/lib/orders/checkout'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'nodejs'
 
+/**
+ * Confirms a Lenco collection with Lenco's API. The widget runs in the browser, so the amount
+ * reported by Lenco must cover the stored (server-priced) order before it is marked paid.
+ */
 export async function GET(request: Request) {
   const params = new URL(request.url).searchParams
-  const reference = params.get('reference') ?? params.get('order')
-  const status = params.get('status')?.toLowerCase()
+  const orderNumber = (params.get('order') ?? params.get('reference'))?.trim()
 
-  if (!reference) {
+  if (!orderNumber) {
     return NextResponse.json({ paid: false, error: 'Missing payment reference' }, { status: 400 })
   }
 
-  if (status === 'failed' || status === 'cancelled') {
-    return NextResponse.json({ paid: false, status, reference })
-  }
-
   try {
-    const verified = await verifyLencoCollection(reference)
+    const order = await getOrder(orderNumber)
+    if (!order || order.paymentMethod !== 'lenco') {
+      return NextResponse.json({ paid: false, orderNumber, error: 'Order not found' }, { status: 404 })
+    }
+
+    if (order.paymentStatus === 'paid') {
+      return NextResponse.json({ paid: true, orderNumber })
+    }
+
+    const verified = await verifyLencoCollection(order.lencoReference ?? order.orderNumber)
+    const paid = verified.paid && paymentCoversOrder(order, verified.amount, verified.currency)
+
+    if (paid) {
+      await markOrderPaid(orderNumber)
+    }
 
     return NextResponse.json({
-      paid:
-        verified.paid &&
-        (verified.currency === undefined || verified.currency === companyInfo.currency),
+      paid,
+      orderNumber,
       status: verified.status,
-      reference,
       amount: verified.amount,
       currency: verified.currency,
     })
   } catch (error) {
     return NextResponse.json(
-      {
-        paid: status === 'successful',
-        reference,
-        error: error instanceof Error ? error.message : 'Verification failed',
-      },
-      { status: 500 },
+      { paid: false, orderNumber, error: error instanceof Error ? error.message : 'Verification failed' },
+      { status: 502 },
     )
   }
 }

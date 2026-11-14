@@ -1,5 +1,4 @@
-import { verifyDpoToken } from '@/lib/dpo'
-import { markPendingDpoOrderPaid } from '@/lib/dpo/pendingOrders'
+import { confirmDpoOrder } from '@/lib/orders/verifyDpo'
 import { getPaymentPublicBaseUrl } from '@/lib/payments/siteUrl'
 import { NextResponse } from 'next/server'
 
@@ -42,17 +41,13 @@ async function handleCallback(params: Record<string, string>, method: string) {
   const transToken = params.TransactionToken ?? params.TransToken ?? params.ID
   const approval = params.TransactionApproval ?? params.transactionApproval ?? params.CCDapproval
 
-  if (companyRef && transToken) {
+  let paid = false
+  if (companyRef) {
     try {
-      const verified = await verifyDpoToken(transToken)
-      if (verified.paid || approval?.toUpperCase() === 'Y') {
-        markPendingDpoOrderPaid(companyRef)
-      }
+      // Never trust TransactionApproval from the query string — always ask DPO.
+      paid = (await confirmDpoOrder(companyRef)).paid
     } catch (error) {
       console.error('DPO callback verify error:', error)
-      if (approval?.toUpperCase() === 'Y' && companyRef) {
-        markPendingDpoOrderPaid(companyRef)
-      }
     }
   }
 
@@ -60,7 +55,7 @@ async function handleCallback(params: Record<string, string>, method: string) {
     const base = getPaymentPublicBaseUrl()
     const searchParams = new URLSearchParams({ order: companyRef })
     if (transToken) searchParams.set('TransactionToken', transToken)
-    if (approval?.toUpperCase() !== 'Y') {
+    if (!paid && approval?.toUpperCase() !== 'Y') {
       searchParams.set('payment', 'cancelled')
     }
 

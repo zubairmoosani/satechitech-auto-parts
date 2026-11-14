@@ -21,8 +21,9 @@ const poppins = Poppins({
 });
 
 export const metadata: Metadata = {
-  title: 'Booking - NextJS | Multipurpose Online Bookinga Template',
-  description: 'Booking - Multipurpose Online Bookinga Template',
+  title: 'SATECHI TECH ENTERPRISES | Auto Parts in Mansa, Zambia',
+  description:
+    'SATECHI TECH ENTERPRISES supplies quality auto parts in Mansa, Zambia — brakes, filters, oils, batteries, and more. Shop online and pay in ZMW.',
 }
 
 export default function RootLayout({

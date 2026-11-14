@@ -31,6 +31,7 @@ export type FlutterwaveVerifyResult = {
   status?: string
   amount?: number
   currency?: string
+  txRef?: string
   message?: string
 }
 
@@ -188,6 +189,7 @@ const verifyV3Transaction = async (transactionId: string): Promise<FlutterwaveVe
       status?: string
       amount?: number
       currency?: string
+      tx_ref?: string
     }
   }
 
@@ -203,6 +205,7 @@ const verifyV3Transaction = async (transactionId: string): Promise<FlutterwaveVe
     status: payload.data?.status,
     amount: payload.data?.amount,
     currency: payload.data?.currency,
+    txRef: payload.data?.tx_ref,
     message: payload.message,
   }
 }
@@ -226,6 +229,7 @@ const verifyV4ByReference = async (reference: string): Promise<FlutterwaveVerify
       status?: string
       amount?: number
       currency?: string
+      reference?: string
     }>
     error?: { message?: string }
   }
@@ -236,7 +240,12 @@ const verifyV4ByReference = async (reference: string): Promise<FlutterwaveVerify
     )
   }
 
-  const charge = payload.data?.[0]
+  const charges = payload.data ?? []
+  const charge =
+    charges.find((item) => {
+      const itemStatus = item.status?.toLowerCase()
+      return itemStatus === 'succeeded' || itemStatus === 'successful' || itemStatus === 'completed'
+    }) ?? charges[0]
   const status = charge?.status?.toLowerCase()
 
   return {
@@ -245,6 +254,7 @@ const verifyV4ByReference = async (reference: string): Promise<FlutterwaveVerify
     status: charge?.status,
     amount: charge?.amount,
     currency: charge?.currency,
+    txRef: charge?.reference ?? reference,
     message: payload.message,
   }
 }

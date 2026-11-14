@@ -21,7 +21,7 @@ const AboutPage = () => {
         <h2 className="h5 text-body mt-4">Who we are</h2>
         <p>
           <strong>{companyInfo.legalName}</strong> (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) is an auto parts retail
-          business based in Mansa, Zambia. We supply quality service and repair parts for cars, bakkies, taxis, and
+          business based in Mansa, Zambia. We supply quality service and repair parts for cars, pickups, taxis, and
           light commercial vehicles.
         </p>
         <p>

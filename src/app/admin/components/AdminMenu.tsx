@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const productLinks = [
+  { label: 'Orders', href: '/admin/orders' },
   { label: 'All Products', href: '/admin/products' },
   { label: 'Add Product', href: '/admin/products/add' },
 ]

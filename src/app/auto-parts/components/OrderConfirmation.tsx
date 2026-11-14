@@ -27,7 +27,6 @@ const OrderConfirmation = () => {
   const lencoReference = searchParams.get('reference')?.trim()
   const orderNumber = orderFromQuery || txRef || lencoReference || null
   const transToken = searchParams.get('TransactionToken') ?? searchParams.get('TransToken') ?? searchParams.get('ID')
-  const transactionApproval = searchParams.get('TransactionApproval')
   const flutterwaveTransactionId = searchParams.get('transaction_id')
   const flutterwaveStatus = searchParams.get('status')?.toLowerCase()
   const lencoStatus = searchParams.get('status')?.toLowerCase()
@@ -50,64 +49,36 @@ const OrderConfirmation = () => {
       }
     }
 
+    let cancelled = false
+
     const verifyOnlinePayment = async () => {
       if (paymentCancelled) return
 
-      const method = stored?.details.paymentMethod
-      const isDpo = method === 'dpo' || !!transToken
-      const isFlutterwave =
-        method === 'flutterwave' || !!flutterwaveTransactionId || (!!txRef && method !== 'lenco')
-      const isLenco = method === 'lenco' || !!lencoReference
+      const method =
+        stored?.details.paymentMethod ??
+        (transToken ? 'dpo' : flutterwaveTransactionId || txRef ? 'flutterwave' : lencoReference ? 'lenco' : undefined)
 
-      if (!isDpo && !isFlutterwave && !isLenco) return
+      if (method !== 'dpo' && method !== 'flutterwave' && method !== 'lenco') return
+      if (stored?.paymentStatus === 'paid') return
 
       setIsVerifying(true)
       try {
-        let isPaid = stored?.paymentStatus === 'paid'
-
-        if (isDpo && (method === 'dpo' || transToken)) {
+        // Payment status always comes from our server, which checks with the gateway.
+        // Mobile money can take a few seconds to settle, so retry a few times.
+        let isPaid = false
+        for (let attempt = 0; attempt < 5 && !cancelled; attempt += 1) {
           const params = new URLSearchParams({ order: orderNumber })
-          if (transToken) params.set('transToken', transToken)
+          if (method === 'flutterwave' && flutterwaveTransactionId) params.set('transaction_id', flutterwaveTransactionId)
 
-          const response = await fetch(`/api/dpo/verify-order?${params.toString()}`)
+          const response = await fetch(`/api/${method}/verify-order?${params.toString()}`, { cache: 'no-store' })
           const data = (await response.json()) as { paid?: boolean }
+          isPaid = data.paid === true
+          if (isPaid || response.status === 404) break
 
-          isPaid =
-            data.paid ||
-            transactionApproval?.toUpperCase() === 'Y' ||
-            stored?.paymentStatus === 'paid'
+          await new Promise((resolve) => setTimeout(resolve, 3000))
         }
 
-        if (isFlutterwave && (method === 'flutterwave' || flutterwaveTransactionId || flutterwaveStatus)) {
-          if (flutterwaveStatus === 'cancelled' || flutterwaveStatus === 'failed') {
-            isPaid = false
-          } else {
-            const params = new URLSearchParams({ order: orderNumber })
-            if (flutterwaveTransactionId) params.set('transaction_id', flutterwaveTransactionId)
-            if (txRef) params.set('tx_ref', txRef)
-            if (flutterwaveStatus) params.set('status', flutterwaveStatus)
-
-            const response = await fetch(`/api/flutterwave/verify-order?${params.toString()}`)
-            const data = (await response.json()) as { paid?: boolean }
-
-            isPaid = data.paid || flutterwaveStatus === 'successful' || flutterwaveStatus === 'completed' || isPaid
-          }
-        }
-
-        if (isLenco && (method === 'lenco' || lencoReference || lencoStatus)) {
-          if (lencoStatus === 'cancelled' || lencoStatus === 'failed') {
-            isPaid = false
-          } else {
-            const params = new URLSearchParams({ order: orderNumber })
-            params.set('reference', lencoReference ?? orderNumber)
-            if (lencoStatus) params.set('status', lencoStatus)
-
-            const response = await fetch(`/api/lenco/verify-order?${params.toString()}`)
-            const data = (await response.json()) as { paid?: boolean }
-
-            isPaid = data.paid || lencoStatus === 'successful' || isPaid
-          }
-        }
+        if (cancelled) return
 
         if (stored && isPaid) {
           const updated: PlacedOrder = {
@@ -115,7 +86,7 @@ const OrderConfirmation = () => {
             paymentStatus: 'paid',
             dpoTransToken: transToken ?? stored.dpoTransToken,
             flutterwaveTransactionId: flutterwaveTransactionId ?? stored.flutterwaveTransactionId,
-            lencoReference: lencoReference ?? stored.lencoReference ?? orderNumber,
+            lencoReference: method === 'lenco' ? orderNumber : stored.lencoReference,
           }
           savePlacedOrder(updated)
           setOrder(updated)
@@ -126,20 +97,21 @@ const OrderConfirmation = () => {
       } catch {
         if (stored) setOrder(stored)
       } finally {
-        setIsVerifying(false)
+        if (!cancelled) setIsVerifying(false)
       }
     }
 
     verifyOnlinePayment()
+
+    return () => {
+      cancelled = true
+    }
   }, [
     orderNumber,
     transToken,
-    transactionApproval,
     flutterwaveTransactionId,
-    flutterwaveStatus,
     txRef,
     lencoReference,
-    lencoStatus,
     paymentCancelled,
     findPlacedOrder,
     savePlacedOrder,
@@ -270,6 +242,8 @@ const OrderConfirmation = () => {
                     Payment for order <strong>{order.orderNumber}</strong> was not completed. Your cart items are still
                     saved — you can return to checkout and try again.
                   </>
+                ) : isOnlinePending && isVerifying ? (
+                  <>Confirming your payment for order <strong>{order.orderNumber}</strong>…</>
                 ) : isOnlinePending ? (
                   <>
                     Order <strong>{order.orderNumber}</strong> was created. Complete payment on {onlineProviderLabel}, or
