@@ -28,6 +28,12 @@ export async function connectMongo(): Promise<typeof mongoose | null> {
     })
   }
 
-  cache.conn = await cache.promise
+  try {
+    cache.conn = await cache.promise
+  } catch (error) {
+    // Don't cache a failed connection (e.g. Atlas cluster paused) — retry on the next request.
+    cache.promise = null
+    throw error
+  }
   return cache.conn
 }
